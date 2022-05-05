@@ -7,7 +7,7 @@ import Category from './Category';
 const Navigation = () => {
 
     const [category, setCategory] = useState(false);
-    const [fixed, setFixed] = useState(false);
+
     const onCategoryEnter = () => {
         setCategory(true);
     }
@@ -16,25 +16,10 @@ const Navigation = () => {
         setCategory(false);
     }
 
-    const onScrollFixMenu = () => {
-        const { scrollY } = window;
-        if (scrollY >= 134) {
-            setFixed(true);
-        } else {
-            setFixed(false);
-        }
-    }
-
-    useEffect(() => {
-        window.addEventListener("scroll", onScrollFixMenu);
-
-        return () => window.removeEventListener("scroll", onScrollFixMenu);
-    }, [])
-
 
     return (
         <>
-            <div className="flex  justify-between items-start px-32 pt-3">
+            <div className="flex h-[100px]  justify-between items-start px-32 pt-3">
                 <div className=" text-xs p-1 px-2 border-2  rounded-2xl"><span className="text-purple-800 font-semibold">샛별,택배</span> 배송안내</div>
                 <div className="relative w-32 h-32 ">
                     <Image layout="fill" objectFit='contain' src={Logo} />
@@ -47,7 +32,7 @@ const Navigation = () => {
                     <span className="cursor-pointer">고객센터</span>
                 </div>
             </div>
-            <ul className="w-full sticky top-0 bg-white flex items-center px-32 space-x-10 shadow-lg">
+            <ul className="w-full sticky top-0 bg-white z-10 flex items-center px-32 space-x-10 shadow-lg">
                 <li onMouseEnter={onCategoryEnter} onMouseLeave={onCategoryMouseLeave} className="flex relative   py-4  cursor-pointer hover:text-purple-800">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />

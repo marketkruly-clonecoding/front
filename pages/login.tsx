@@ -1,7 +1,9 @@
 import Button from '@components/Button';
+import { useEffect } from 'react';
 import Navigation from '../components/Nav/Navigation';
 
 const Login = () => {
+
 
     return (
         <div className="w-full  h-[100vh]">
