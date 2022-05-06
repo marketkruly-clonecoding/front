@@ -12,6 +12,8 @@ function MyApp({ Component, pageProps }: AppProps) {
   useEffect(() => {
     if (router.asPath === "/signup") {
       setHeight("250vh")
+    } else if (router.asPath === "/") {
+      setHeight("300vh")
     }
 
   }, []);
@@ -21,6 +23,7 @@ function MyApp({ Component, pageProps }: AppProps) {
       <Navigation />
       <Component {...pageProps} />
     </div>
+
   )
 }
 

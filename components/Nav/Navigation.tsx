@@ -1,5 +1,6 @@
 import { cls } from '@libs/cls';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Logo from "../../public/images/마켓컬리.png"
 import Category from './Category';
@@ -21,13 +22,17 @@ const Navigation = () => {
         <>
             <div className="flex h-[100px]  justify-between items-start px-32 pt-3">
                 <div className=" text-xs p-1 px-2 border-2  rounded-2xl"><span className="text-purple-800 font-semibold">샛별,택배</span> 배송안내</div>
-                <div className="relative w-32 h-32 ">
-                    <Image layout="fill" objectFit='contain' src={Logo} />
-                </div>
+                <Link href="/">
+                    <a>
+                        <div className="relative w-28 h-28 ">
+                            <Image layout="fill" objectFit='contain' src={Logo} />
+                        </div>
+                    </a>
+                </Link>
                 <div className="text-xs space-x-3">
-                    <span className="cursor-pointer">회원가입</span>
+                    <Link href="/signup"><a className="cursor-pointer">회원가입</a></Link>
                     <span>|</span>
-                    <span className="cursor-pointer">로그인</span>
+                    <Link href="/login"><a className="cursor-pointer">로그인</a></Link>
                     <span>|</span>
                     <span className="cursor-pointer">고객센터</span>
                 </div>
