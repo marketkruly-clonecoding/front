@@ -1,15 +1,28 @@
 import Image from 'next/image';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-const SideBar = () => {
+
+interface ISideBar {
+    position: string;
+    initScrollPosition: number;
+}
+
+const SideBar = ({ position, initScrollPosition }: ISideBar) => {
 
     const sidebar = useRef<HTMLDivElement>(null);
 
     const controllerSideBarPos = () => {
 
-        console.log(sidebar.current?.getBoundingClientRect());
-    }
+        if (sidebar.current) {
+            if (window.scrollY <= initScrollPosition) {
+                sidebar.current.style.top = position;
+                return;
+            }
 
+            setTimeout(() => { sidebar.current!.style.top = `${window.scrollY + 100}px` }, 10);
+        }
+
+    }
 
     useEffect(() => {
         window.addEventListener("scroll", controllerSideBarPos);
@@ -19,7 +32,9 @@ const SideBar = () => {
 
 
     return (
-        <div ref={sidebar} className="absolute right-0  top-[120vh] w-[80px] space-y-2 z-20  ">
+        <div ref={sidebar}
+            style={{ top: `${position}` }}
+            className={`transition-all  absolute  right-2 top-[${position}] w-[80px] space-y-2`}>
             <div className="relative w-full h-[120px] ">
                 <Image layout="fill" objectFit='cover' src={"/images/사이드바.PNG"} />
             </div>
