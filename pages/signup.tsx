@@ -1,9 +1,9 @@
 import Alarm from '@components/Alarm';
 import Button from '@components/Button';
 import SearchAddress from '@components/SearchAddress';
-import React, { ChangeEvent, useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState, useRef } from 'react';
 import { useForm } from "react-hook-form";
-
+import { cls } from "@libs/cls";
 
 export interface ISignUpForm {
     id: string;
@@ -17,6 +17,7 @@ export interface ISignUpForm {
     birth_day: string;
     address_main: string;
     address_sub: string;
+    sex: string;
 }
 
 
@@ -24,21 +25,65 @@ export interface ISignUpForm {
 const SignUp = () => {
 
 
-    const { register, handleSubmit, watch, formState: { errors } } = useForm<ISignUpForm>()
+    const { register, handleSubmit, watch, resetField, formState: { errors } } = useForm<ISignUpForm>()
     const [kind, setKind] = useState("");
     const [isAllChecked, setIsAllChecked] = useState(false);
     const [checkedItems, setCheckedItems] = useState<string[]>([]);
+    const [error, setError] = useState("");
+
+    const [idWarningInfo, setIdWarningInfo] = useState(false);
+    const [pwdWarningInfo, setPwdWarningInfo] = useState(false);
+    const [pwd2WarningInfo, setPwd2WarningInfo] = useState(false);
+
+    const idregs = useRef(/^[0-9a-zA-Z]{6,}$/);
+    const pwregs = useRef([/.{10,}/,
+        /^(?=.*[0-9])(?=.*[a-zA-Z]).{2,}$/,
+        /^(?=.*[!@#$%^&*()_+])(?=.*[a-zA-Z]).{2,}$/,
+        /^(?=.*[0-9])(?=.*[!@#$%^&*()_+]).{2,}$/,
+        /^(?=.*[0-9])(?=.*[!@#$%^&*()_+])(?=.*[a-zA-Z]).{3,}$/,
+        /(\w)\1\1/]);
+
+
 
     const idWatcher = watch("id");
     const pdWatcher = watch("password");
     const pdConfirmWatcher = watch("passwordConfirm");
+    const birthYearWatcher = watch("birth_year");
+    const birthMonthWatcher = watch("birth_month");
+    const birthDayWatcher = watch("birth_day");
 
+
+    const pwSecondConditionChecker = (pwd: string) => {
+
+        return pwregs.current[1].test(pwd) || pwregs.current[2].test(pwd) || pwregs.current[3].test(pwd)
+            || pwregs.current[4].test(pwd)
+    }
+
+    const onIdFocus = () => {
+        setIdWarningInfo(true);
+    }
+
+    const onPwdFocus = () => {
+        setPwdWarningInfo(true);
+    }
+
+    const onPwd2Focus = () => {
+        setPwd2WarningInfo(true);
+    }
 
     const onValid = (data: ISignUpForm) => {
-        console.log(kind);
-        console.log(data);
+        if (!checkedItems.includes("use") || !checkedItems.includes("requiredPrivacy") || !checkedItems.includes("age")) {
+            setError("필수 항목에 체크해주세요");
+            return;
+        }
     }
-    const onInValid = (data: any) => console.log(data);
+    const onInValid = (data: any) => {
+
+        const firstErrorKey = Object.keys(data)[0];
+        const firstError = data[firstErrorKey].message;
+        setError(firstError);
+
+    }
 
     const onSelectKind = (e: React.MouseEvent) => {
         const target = e.target as Element
@@ -84,6 +129,24 @@ const SignUp = () => {
         )
     }
 
+    useEffect(() => {
+        if (birthYearWatcher) {
+            if (!/\d/.test(birthYearWatcher)) resetField("birth_year");
+        }
+    }, [birthYearWatcher])
+
+    useEffect(() => {
+        if (birthMonthWatcher) {
+            if (!/\d/.test(birthMonthWatcher)) resetField("birth_month");
+        }
+    }, [birthMonthWatcher])
+
+    useEffect(() => {
+        if (birthDayWatcher) {
+            if (!/\d/.test(birthDayWatcher)) resetField("birth_day");
+        }
+    }, [birthDayWatcher])
+
 
 
 
@@ -99,9 +162,9 @@ const SignUp = () => {
                         <div className=" grid gap-x-2 items-center grid-cols-[1.3fr_3fr_1fr]">
                             <div className="p-3 pl-0 self-start">아이디<span className="text-red-600">*</span></div>
                             <div className="">
-                                <input {...register("id", { required: true, pattern: /^[0-9a-zA-Z]{6,}$/ })} className="border-2 rounded-sm w-full p-3 mb-2 text-sm" placeholder="6자 이상의 영문 혹은 영문과 숫자를 조합" />
-                                <div className="text-xs space-y-1">
-                                    <div>6자 이상의 영문 혹은 영문과 숫자를 조합</div>
+                                <input onFocus={onIdFocus} {...register("id", { required: { value: true, message: "아이디를 입력해주세요" }, pattern: { value: /^[0-9a-zA-Z]{6,}$/, message: "아이디가 조건에 맞지 않습니다" } })} className="border-2 rounded-sm w-full p-3 mb-2 text-sm" placeholder="6자 이상의 영문 혹은 영문과 숫자를 조합" />
+                                <div className={cls(idWarningInfo ? "" : "hidden", "text-xs space-y-1")}>
+                                    <div className={cls(idregs.current.test(idWatcher) ? "text-green-600" : "text-red-600")}>6자 이상의 영문 혹은 영문과 숫자를 조합</div>
                                     <div>아이디 중복확인</div>
                                 </div>
                             </div>
@@ -112,37 +175,49 @@ const SignUp = () => {
                         <div className=" grid gap-x-2 items-center grid-cols-[1.3fr_3fr_1fr]">
                             <div className="p-3 pl-0 self-start">비밀번호<span className="text-red-600">*</span></div>
                             <div>
-                                <input {...register("password", { required: true })} className="border-2 rounded-sm w-full p-3 mb-2 text-sm" placeholder="비밀번호를 입력해주세요" />
-                                <div className="text-xs space-y-1">
-                                    <div>10자 이상 입력</div>
-                                    <div>영문/숫자/특수문자(공백 제외)만 허용하며,2개 이상 조합</div>
-                                    <div>동일한 숫자 3개 이상 연속 사용 불가</div>
+                                <input onFocus={onPwdFocus} {...register("password", {
+                                    required: { value: true, message: "비밀번호를 입력해주세요" },
+                                    validate: {
+                                        one: v => pwregs.current[0].test(v) || "비밀번호는 10자 이상이어야 합니다.",
+                                        two: v => pwSecondConditionChecker(v) || "비밀번호 2번째 조건이 부적합합니다.",
+                                        three: v => !pwregs.current[5].test(v) || "비밀번호 3번째 조건이 부적합합니다."
+                                    }
+                                })} className="border-2 rounded-sm w-full p-3 mb-2 text-sm" placeholder="비밀번호를 입력해주세요" />
+                                <div className={cls(pwdWarningInfo ? "" : "hidden", "text-xs space-y-1")}>
+                                    <div className={cls(pwregs.current[0].test(pdWatcher) ? "text-green-600" : "text-red-600")}>10자 이상 입력</div>
+                                    <div className={cls(pwSecondConditionChecker(pdWatcher) ? "text-green-600" : "text-red-600")}>영문/숫자/특수문자(공백 제외)만 허용하며,2개 이상 조합</div>
+                                    <div className={cls(pwregs.current[5].test(pdWatcher) ? "text-red-600" : "text-green-600")}>동일한 숫자 3개 이상 연속 사용 불가</div>
                                 </div>
                             </div>
                         </div>
                         <div className="grid gap-x-2 items-center grid-cols-[1.3fr_3fr_1fr]">
                             <div className="p-3 pl-0 self-start">비밀번호확인<span className="text-red-600">*</span></div>
                             <div>
-                                <input {...register("passwordConfirm", { required: true })} className="border-2 rounded-sm w-full p-3 mb-2 text-sm" placeholder="비밀번호를 한번 더 입력해주세요" />
-                                <div className="text-xs space-y-1">
-                                    <div>동일한 비밀번호를 입력해주세요</div>
+                                <input onFocus={onPwd2Focus} {...register("passwordConfirm", {
+                                    required: { value: true, message: "비밀번호 확인을 입력해주세요" },
+                                    validate: {
+                                        one: v => pdWatcher === v || "비밀번호가 일치하지 않습니다."
+                                    }
+                                })} className="border-2 rounded-sm w-full p-3 mb-2 text-sm" placeholder="비밀번호를 한번 더 입력해주세요" />
+                                <div className={cls(pwd2WarningInfo ? "" : "hidden", "text-xs space-y-1")}>
+                                    <div className={cls(pdWatcher === pdConfirmWatcher ? "text-green-600" : "text-red-600")}>동일한 비밀번호를 입력해주세요</div>
                                 </div>
 
                             </div>
                         </div>
                         <div className=" grid gap-x-2 items-center grid-cols-[1.3fr_3fr_1fr]">
                             <div>이름<span className="text-red-600">*</span></div>
-                            <input {...register("name", { required: true })} className="border-2 rounded-sm w-full p-3 text-sm" placeholder="이름을 입력해주세요" />
+                            <input {...register("name", { required: { value: true, message: "이름을 입력해주세요" } })} className="border-2 rounded-sm w-full p-3 text-sm" placeholder="이름을 입력해주세요" />
                         </div>
                         <div className=" grid gap-x-2 items-center grid-cols-[1.3fr_3fr_1fr]">
                             <div>이메일<span className="text-red-600">*</span></div>
-                            <input {...register("email", { required: true })} className="border-2 rounded-sm w-full p-3  text-sm" placeholder="예:marketkurly@kurly.com" />
+                            <input {...register("email", { required: { value: true, message: "이메일을 입력해주세요" }, pattern: { value: /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/, message: "이메일 형식이 부적절합니다." } })} className="border-2 rounded-sm w-full p-3  text-sm" placeholder="예:marketkurly@kurly.com" />
                             <Button size="small" backcolor="white" text="중복확인" />
                         </div>
                         <div className="grid  gap-x-2 items-center grid-cols-[1.3fr_3fr_1fr]">
                             <div>휴대폰<span className="text-red-600">*</span></div>
                             <div>
-                                <input {...register("phone", { required: true })} className="border-2 rounded-sm w-full p-3 text-sm" placeholder="숫자만 입력해주세요" />
+                                <input {...register("phone", { required: { value: true, message: "휴대전화를 입력해주세요" }, pattern: { value: /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/, message: "전화번호 형식이 적절하지 않습니다." } })} className="border-2 rounded-sm w-full p-3 text-sm" placeholder="숫자만 입력해주세요" />
                             </div>
                             <Button size="small" backcolor="white" text="중복확인" />
                         </div>
@@ -155,29 +230,33 @@ const SignUp = () => {
                             <div onClick={onSelectKind} className="flex justify-between text-md">
                                 <label>
                                     <input
+                                        {...register("sex", { required: true })}
                                         className="mr-2"
                                         type="radio"
-                                        name="gender"
+                                        name="sex"
                                         value="man"
                                     ></input>
                                     남자
                                 </label>
                                 <label>
                                     <input
+                                        {...register("sex", { required: true })}
                                         className="mr-2"
                                         type="radio"
-                                        name="gender"
+                                        name="sex"
                                         value="girl"
                                     ></input>
                                     여자
                                 </label>
                                 <label>
                                     <input
+                                        {...register("sex", { required: true })}
                                         className="mr-2"
                                         type="radio"
-                                        name="gender"
+                                        name="sex"
                                         value="no"
                                     ></input>
+
                                     선택안함
                                 </label>
                             </div>
@@ -185,11 +264,26 @@ const SignUp = () => {
                         <div className=" grid gap-x-2 items-center grid-cols-[1.3fr_3fr_1fr]">
                             <h1>생년원일</h1>
                             <div className="flex items-center border-2 ">
-                                <input {...register("birth_year", { required: true })} className="outline-none p-2 pl-9 w-28" type="text" placeholder="YYYY" />
+                                <input maxLength={4} {...register("birth_year", {
+                                    required: { value: true, message: "생년원일을 입력해주세요" }
+                                    ,
+                                    pattern: {
+                                        value: /(19|20)\d{2}/
+                                        , message: "연도를 정확히 입력해주세요"
+                                    }
+                                })} className="outline-none p-2 pl-9 w-28" type="text" placeholder="YYYY" />
                                 <span>/</span>
-                                <input {...register("birth_month", { required: true })} className="outline-none p-2 pl-9 w-28" type="text" placeholder="MM" />
+                                <input maxLength={2} {...register("birth_month", {
+                                    required: { value: true, message: "생년월일을 입력해주세요" }
+                                    ,
+                                    pattern: { value: /0[1-9]|1[012]/, message: "달을 정확히 입력해주세요" }
+                                })} className="outline-none p-2 pl-9 w-28" type="text" placeholder="MM" />
                                 <span>/</span>
-                                <input {...register("birth_day", { required: true })} className="outline-none p-2 pl-9 w-28" type="text" placeholder="DD" />
+                                <input maxLength={2} {...register("birth_day", {
+                                    required: { value: true, message: "생년월일을 입력해주세요" }
+                                    ,
+                                    pattern: { value: /0[1-9]|[12][0-9]|3[01]/, message: "날짜 일을 정확히 입력해주세요" }
+                                })} className="outline-none p-2 pl-9 w-28" type="text" placeholder="DD" />
                             </div>
                         </div>
                     </div>
@@ -198,7 +292,7 @@ const SignUp = () => {
                             이용약관동의<span className="text-red-600">*</span>
                         </h1>
                         <div onChange={onPartSelectChange} className="flex flex-col space-y-5">
-                            <label className="flex  ">
+                            <label className="flex">
                                 <input
                                     onClick={onAllChange}
                                     className="mr-2 w-5 h-5 mt-3"
@@ -248,7 +342,7 @@ const SignUp = () => {
                     </div>
                 </form>
             </div>
-
+            {error ? <Alarm message={error} setMessage={setError} /> : null}
         </div >
     )
 }
