@@ -8,6 +8,7 @@ import Category from './Category';
 const Navigation = () => {
 
     const [category, setCategory] = useState(false);
+    const [serviceCenter, setServiceCenter] = useState(false);
 
     const onCategoryEnter = () => {
         setCategory(true);
@@ -15,6 +16,14 @@ const Navigation = () => {
 
     const onCategoryMouseLeave = () => {
         setCategory(false);
+    }
+
+    const onServiceMouseEnter = () => {
+        setServiceCenter(true);
+    }
+
+    const onServiceMouseLeave = () => {
+        setServiceCenter(false);
     }
 
 
@@ -29,12 +38,22 @@ const Navigation = () => {
                         </div>
                     </a>
                 </Link>
-                <div className="text-xs space-x-3">
+                <div className="text-xs space-x-3 relative">
                     <Link href="/signup"><a className="cursor-pointer">회원가입</a></Link>
                     <span>|</span>
                     <Link href="/login"><a className="cursor-pointer">로그인</a></Link>
                     <span>|</span>
-                    <span className="cursor-pointer">고객센터</span>
+                    <span onMouseEnter={onServiceMouseEnter} onMouseLeave={onServiceMouseLeave} className="cursor-pointer p-1">고객센터</span>
+                    {serviceCenter ?
+                        <ul onMouseEnter={onServiceMouseEnter} onMouseLeave={onServiceMouseLeave} className="border-2 w-28 p-2 absolute right-0 top-5 z-20 bg-white space-y-2 ">
+                            <li className="cursor-pointer">공지사항</li>
+                            <li className="cursor-pointer">자주하는 질문</li>
+                            <li className="cursor-pointer">1:1문의</li>
+                            <li className="cursor-pointer">대량주문 문의</li>
+                            <li className="cursor-pointer">상품 제안</li>
+                            <li className="cursor-pointer">에코포장 피드백</li>
+                        </ul>
+                        : null}
                 </div>
             </div>
             <ul className="w-full sticky top-0 bg-white z-10 flex items-center px-28 space-x-10 shadow-lg">
