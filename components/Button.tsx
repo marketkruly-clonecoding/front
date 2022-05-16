@@ -9,9 +9,9 @@ interface IButton {
 
 }
 
-const Button = ({ size, text, backcolor, type }: IButton) => {
+const Button = ({ size, text, backcolor, type, onClick }: IButton) => {
     return (
-        <button type={type ? type : "button"} className={cls(
+        <button onClick={onClick} type={type ? type : "button"} className={cls(
             backcolor === "white" ? "border-2 border-purple-800 text-purple-800" : "bg-purple-800 text-white",
             "p-3 rounded-sm",
             size === "small" ? "w-[110px] p-2" : size === "middle" ? "w-[340px]" : "w-[430px]"

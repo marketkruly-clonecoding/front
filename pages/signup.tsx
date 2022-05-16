@@ -4,6 +4,7 @@ import SearchAddress from '@components/SearchAddress';
 import React, { ChangeEvent, useEffect, useState, useRef } from 'react';
 import { useForm } from "react-hook-form";
 import { cls } from "@libs/cls";
+import useMutate from '@libs/useMutate';
 
 export interface ISignUpForm {
     id: string;
@@ -35,6 +36,10 @@ const SignUp = () => {
     const [pwdWarningInfo, setPwdWarningInfo] = useState(false);
     const [pwd2WarningInfo, setPwd2WarningInfo] = useState(false);
 
+
+    const [mutate, { data, loading, error: dataError }] = useMutate("http://prod.milopage.site:9000/app/users/join");
+    const [checkMutate, { data: checkData, loading: checkLoading }] = useMutate("http://prod.milopage.site:9000/app/users/join/check");
+
     const idregs = useRef(/^[0-9a-zA-Z]{6,}$/);
     const pwregs = useRef([/.{10,}/,
         /^(?=.*[0-9])(?=.*[a-zA-Z]).{2,}$/,
@@ -42,7 +47,6 @@ const SignUp = () => {
         /^(?=.*[0-9])(?=.*[!@#$%^&*()_+]).{2,}$/,
         /^(?=.*[0-9])(?=.*[!@#$%^&*()_+])(?=.*[a-zA-Z]).{3,}$/,
         /(\w)\1\1/]);
-
 
 
     const idWatcher = watch("id");
@@ -71,11 +75,40 @@ const SignUp = () => {
         setPwd2WarningInfo(true);
     }
 
+    const onIdCheckClick = () => {
+        console.log("클릭");
+        // console.log(checkMutate({ id: idWatcher }));
+        fetch("http://prod.milopage.site:9000/app/users/join/check",
+            {
+
+                method: "get",
+                body: JSON.stringify({ id: idWatcher })
+
+            }).then(res => res.json()).then(data => console.log(data)).catch(e => console.log(e));
+    }
+
+    useEffect(() => {
+        console.log(checkData);
+    }, [checkData]);
+
     const onValid = (data: ISignUpForm) => {
         if (!checkedItems.includes("use") || !checkedItems.includes("requiredPrivacy") || !checkedItems.includes("age")) {
             setError("필수 항목에 체크해주세요");
             return;
         }
+        if (!data.address_main || !data.address_sub) {
+            setError("주소를 입력해주세요");
+            return;
+        }
+
+        const postData = {
+            id: data.id, pwd: data.password, name: data.name, email: data.email,
+            phone: data.phone, sex: data.sex,
+            birth: data.birth_year + " " + data.birth_month + " " + data.birth_day,
+            address: data.address_main + " " + data.address_sub
+        }
+        mutate(postData);
+
     }
     const onInValid = (data: any) => {
 
@@ -169,7 +202,7 @@ const SignUp = () => {
                                 </div>
                             </div>
                             <div className="self-start">
-                                <Button size="small" backcolor="white" text="중복확인" />
+                                <Button onClick={onIdCheckClick} size="small" backcolor="white" text="중복확인" />
                             </div>
                         </div>
                         <div className=" grid gap-x-2 items-center grid-cols-[1.3fr_3fr_1fr]">
@@ -217,7 +250,7 @@ const SignUp = () => {
                         <div className="grid  gap-x-2 items-center grid-cols-[1.3fr_3fr_1fr]">
                             <div>휴대폰<span className="text-red-600">*</span></div>
                             <div>
-                                <input {...register("phone", { required: { value: true, message: "휴대전화를 입력해주세요" }, pattern: { value: /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/, message: "전화번호 형식이 적절하지 않습니다." } })} className="border-2 rounded-sm w-full p-3 text-sm" placeholder="숫자만 입력해주세요" />
+                                <input {...register("phone", { required: { value: true, message: "휴대전화를 입력해주세요" }, pattern: { value: /^01([0|1|6|7|8|9])([0-9]{3,4})([0-9]{4})$/, message: "전화번호 형식이 적절하지 않습니다." } })} className="border-2 rounded-sm w-full p-3 text-sm" placeholder="숫자만 입력해주세요" />
                             </div>
                             <Button size="small" backcolor="white" text="중복확인" />
                         </div>
