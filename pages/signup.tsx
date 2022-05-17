@@ -5,6 +5,7 @@ import React, { ChangeEvent, useEffect, useState, useRef } from 'react';
 import { useForm } from "react-hook-form";
 import { cls } from "@libs/cls";
 import useMutate from '@libs/useMutate';
+import { useRouter } from 'next/router';
 
 export interface ISignUpForm {
     id: string;
@@ -18,7 +19,19 @@ export interface ISignUpForm {
     birth_day: string;
     address_main: string;
     address_sub: string;
-    sex: string;
+    sex?: string;
+}
+
+interface SignUpSubmit {
+    id: string;
+    pwd: string;
+    name: string;
+    email: string;
+    phone: string;
+    sex?: "M" | "G",
+    birth: string;
+    address_desc: string;
+
 }
 
 
@@ -37,8 +50,47 @@ const SignUp = () => {
     const [pwd2WarningInfo, setPwd2WarningInfo] = useState(false);
 
 
-    const [mutate, { data, loading, error: dataError }] = useMutate("http://prod.milopage.site:9000/app/users/join");
-    const [checkMutate, { data: checkData, loading: checkLoading }] = useMutate("http://prod.milopage.site:9000/app/users/join/check");
+
+    const [idOverlap, setIdOverlap] = useState(false);
+    const [emailOverlap, setEmailOverlap] = useState(false);
+    const [phoneOverlap, setPhoneOverlap] = useState(false);
+
+    const [mutate, { data, loading, error: dataError }] = useMutate("http://prod.hiimpedro.site:9000/app/users/join");
+    const [checkMutate, { data: checkData, loading: checkLoading, error: checkError }] = useMutate("http://prod.hiimpedro.site:9000/app/users/join/check");
+
+
+    const overlapCheck = (key: string, data: string) => {
+
+        fetch("http://prod.hiimpedro.site:9000/app/users/join/check", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ [key]: data })
+        }).then(result => result.json()).then(data => {
+
+            if (data.code === 1000) {
+                alert(`사용가능한 ${key} 입니다.`);
+                if (key === "id") {
+                    setIdOverlap(true);
+                } else if (key === "email") {
+                    setEmailOverlap(true);
+                } else if (key === "phone") {
+                    setPhoneOverlap(true);
+                }
+            } else if (data.code === 4000) {
+                alert(`이미 등록되어 있는 ${key} 입니다.`);
+                if (key === "id") {
+                    setIdOverlap(false);
+                } else if (key === "email") {
+                    setEmailOverlap(false);
+                } else if (key === "phone") {
+                    setPhoneOverlap(false);
+                }
+            }
+        });
+    }
+
 
     const idregs = useRef(/^[0-9a-zA-Z]{6,}$/);
     const pwregs = useRef([/.{10,}/,
@@ -75,24 +127,20 @@ const SignUp = () => {
         setPwd2WarningInfo(true);
     }
 
-    const onIdCheckClick = () => {
-        console.log("클릭");
-        // console.log(checkMutate({ id: idWatcher }));
-        fetch("http://prod.milopage.site:9000/app/users/join/check",
-            {
 
-                method: "get",
-                body: JSON.stringify({ id: idWatcher })
 
-            }).then(res => res.json()).then(data => console.log(data)).catch(e => console.log(e));
+    const onOverlapCheckClick = (key: "id" | "email" | "phone") => () => {
+        overlapCheck(key, watch(key));
     }
 
-    useEffect(() => {
-        console.log(checkData);
-    }, [checkData]);
+
+
+
+
+
 
     const onValid = (data: ISignUpForm) => {
-        if (!checkedItems.includes("use") || !checkedItems.includes("requiredPrivacy") || !checkedItems.includes("age")) {
+        if (!isValidCheckBox()) {
             setError("필수 항목에 체크해주세요");
             return;
         }
@@ -101,15 +149,27 @@ const SignUp = () => {
             return;
         }
 
-        const postData = {
+        const postData: SignUpSubmit = {
             id: data.id, pwd: data.password, name: data.name, email: data.email,
-            phone: data.phone, sex: data.sex,
+            phone: data.phone,
+            sex: data.sex === "man" ? "M" : "G",
             birth: data.birth_year + " " + data.birth_month + " " + data.birth_day,
-            address: data.address_main + " " + data.address_sub
+            address_desc: data.address_main + " " + data.address_sub
         }
-        mutate(postData);
+        if (data.sex === "no") {
+            delete postData.sex;
+        }
 
+        mutate(postData);
     }
+
+    useEffect(() => {
+        if (data && data.code === 1000) {
+            useRouter().push("/login");
+        }
+    }, [data])
+
+
     const onInValid = (data: any) => {
 
         const firstErrorKey = Object.keys(data)[0];
@@ -195,14 +255,18 @@ const SignUp = () => {
                         <div className=" grid gap-x-2 items-center grid-cols-[1.3fr_3fr_1fr]">
                             <div className="p-3 pl-0 self-start">아이디<span className="text-red-600">*</span></div>
                             <div className="">
-                                <input onFocus={onIdFocus} {...register("id", { required: { value: true, message: "아이디를 입력해주세요" }, pattern: { value: /^[0-9a-zA-Z]{6,}$/, message: "아이디가 조건에 맞지 않습니다" } })} className="border-2 rounded-sm w-full p-3 mb-2 text-sm" placeholder="6자 이상의 영문 혹은 영문과 숫자를 조합" />
+                                <input onFocus={onIdFocus} {...register("id", {
+                                    required: { value: true, message: "아이디를 입력해주세요" },
+                                    pattern: { value: /^[0-9a-zA-Z]{6,}$/, message: "아이디가 조건에 맞지 않습니다" },
+                                    validate: { one: v => idOverlap || "아이디 중복조건을 만족하지 않습니다." }
+                                })} className="border-2 rounded-sm w-full p-3 mb-2 text-sm" placeholder="6자 이상의 영문 혹은 영문과 숫자를 조합" />
                                 <div className={cls(idWarningInfo ? "" : "hidden", "text-xs space-y-1")}>
                                     <div className={cls(idregs.current.test(idWatcher) ? "text-green-600" : "text-red-600")}>6자 이상의 영문 혹은 영문과 숫자를 조합</div>
-                                    <div>아이디 중복확인</div>
+                                    <div className={cls(idOverlap ? "text-green-600" : "text-red-600")}>아이디 중복확인</div>
                                 </div>
                             </div>
                             <div className="self-start">
-                                <Button onClick={onIdCheckClick} size="small" backcolor="white" text="중복확인" />
+                                <Button onClick={onOverlapCheckClick("id")} size="small" backcolor="white" text="중복확인" />
                             </div>
                         </div>
                         <div className=" grid gap-x-2 items-center grid-cols-[1.3fr_3fr_1fr]">
@@ -244,15 +308,27 @@ const SignUp = () => {
                         </div>
                         <div className=" grid gap-x-2 items-center grid-cols-[1.3fr_3fr_1fr]">
                             <div>이메일<span className="text-red-600">*</span></div>
-                            <input {...register("email", { required: { value: true, message: "이메일을 입력해주세요" }, pattern: { value: /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/, message: "이메일 형식이 부적절합니다." } })} className="border-2 rounded-sm w-full p-3  text-sm" placeholder="예:marketkurly@kurly.com" />
-                            <Button size="small" backcolor="white" text="중복확인" />
+                            <input {...register("email", {
+                                required: { value: true, message: "이메일을 입력해주세요" },
+                                pattern: { value: /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/, message: "이메일 형식이 부적절합니다." },
+                                validate: {
+                                    one: v => emailOverlap || "이메일이 중복 조건을 만족하지 않습니다."
+                                }
+                            })} className="border-2 rounded-sm w-full p-3  text-sm" placeholder="예:marketkurly@kurly.com" />
+                            <Button onClick={onOverlapCheckClick("email")} size="small" backcolor="white" text="중복확인" />
                         </div>
                         <div className="grid  gap-x-2 items-center grid-cols-[1.3fr_3fr_1fr]">
                             <div>휴대폰<span className="text-red-600">*</span></div>
                             <div>
-                                <input {...register("phone", { required: { value: true, message: "휴대전화를 입력해주세요" }, pattern: { value: /^01([0|1|6|7|8|9])([0-9]{3,4})([0-9]{4})$/, message: "전화번호 형식이 적절하지 않습니다." } })} className="border-2 rounded-sm w-full p-3 text-sm" placeholder="숫자만 입력해주세요" />
+                                <input {...register("phone", {
+                                    required: { value: true, message: "휴대전화를 입력해주세요" },
+                                    pattern: { value: /^01([0|1|6|7|8|9])([0-9]{3,4})([0-9]{4})$/, message: "전화번호 형식이 적절하지 않습니다." },
+                                    validate: {
+                                        one: v => phoneOverlap || "핸드폰 중복 조건을 만족하지 않습니다."
+                                    }
+                                })} className="border-2 rounded-sm w-full p-3 text-sm" placeholder="숫자만 입력해주세요" />
                             </div>
-                            <Button size="small" backcolor="white" text="중복확인" />
+                            <Button onClick={onOverlapCheckClick("phone")} size="small" backcolor="white" text="중복확인" />
                         </div>
                         <div className="grid gap-x-2 items-center grid-cols-[1.3fr_4fr]">
                             <div className="p-3 pl-0 self-start">주소<span className="text-red-600">*</span></div>
@@ -268,6 +344,7 @@ const SignUp = () => {
                                         type="radio"
                                         name="sex"
                                         value="man"
+                                        readOnly
                                     ></input>
                                     남자
                                 </label>
@@ -278,6 +355,7 @@ const SignUp = () => {
                                         type="radio"
                                         name="sex"
                                         value="girl"
+                                        readOnly
                                     ></input>
                                     여자
                                 </label>
@@ -288,6 +366,8 @@ const SignUp = () => {
                                         type="radio"
                                         name="sex"
                                         value="no"
+                                        readOnly
+                                        defaultChecked
                                     ></input>
 
                                     선택안함
@@ -330,6 +410,7 @@ const SignUp = () => {
                                     onClick={onAllChange}
                                     className="mr-2 w-5 h-5 mt-3"
                                     type="checkbox"
+                                    readOnly
                                     checked={isAllChecked}
                                 />
                                 <div className="self-start pt-2 ">
@@ -341,30 +422,35 @@ const SignUp = () => {
                             <label className="flex items-center text-sm font-semibold text-gray-500">
                                 <input value="use" className="part mr-2 w-5 h-5" type="checkbox"
                                     checked={checkedItems.includes("use") ? true : false}
+                                    readOnly
                                 />
                                 이용약관 동의<span>(필수)</span>
                             </label>
                             <label className="flex items-center text-sm font-semibold text-gray-500">
                                 <input value="requiredPrivacy" className="part mr-2 w-5 h-5" type="checkbox"
                                     checked={checkedItems.includes("requiredPrivacy") ? true : false}
+                                    readOnly
                                 />
                                 개인정보 수집•이용 동의<span>(필수)</span>
                             </label>
                             <label className="flex items-center text-sm font-semibold text-gray-500">
                                 <input value="privacy" className="part mr-2 w-5 h-5" type="checkbox"
                                     checked={checkedItems.includes("privacy") ? true : false}
+                                    readOnly
                                 />
                                 개인정보 수집•이용 동의<span>(선택)</span>
                             </label>
                             <label className="flex items-center text-sm font-semibold text-gray-500">
                                 <input value="delivery" className="part mr-2 w-5 h-5" type="checkbox"
                                     checked={checkedItems.includes("delivery") ? true : false}
+                                    readOnly
                                 />
                                 무료배송,할인쿠폰 등 혜택/정보 수신 동의<span>(선택)</span>
                             </label>
                             <label className="flex items-center text-sm font-semibold text-gray-500">
                                 <input value="age" className="part mr-2 w-5 h-5" type="checkbox"
                                     checked={checkedItems.includes("age") ? true : false}
+                                    readOnly
                                 />
                                 본인은 만 14세 이상입니다.<span>(필수)</span>
                             </label>
