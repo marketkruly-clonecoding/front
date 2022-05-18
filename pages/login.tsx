@@ -1,8 +1,13 @@
 import Button from '@components/Button';
 import useMutate from '@libs/useMutate';
+import { login } from '@modules/user';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import Navigation from '../components/Nav/Navigation';
+import { useDispatch } from 'react-redux';
+import Cookies from "universal-cookie";
+const cookies = new Cookies();
 
 
 interface ILoginForm {
@@ -13,8 +18,10 @@ interface ILoginForm {
 const Login = () => {
 
 
-    const [mutate, { data, error, loading }] = useMutate("http://prod.hiimpedro.site:9000/app/users/login");
+    const [mutate, { data, error, loading }] = useMutate("http://prod.hiimpedro.site:9000/app/users/logIn");
     const { register, handleSubmit } = useForm<ILoginForm>();
+    const router = useRouter();
+    const dispatch = useDispatch();
 
     const onValid = (data: ILoginForm) => {
         if (loading) return;
@@ -24,6 +31,17 @@ const Login = () => {
     const onInValid = (e: any) => {
         alert("아이디 또는 비밀번호 오류입니다.");
     }
+
+    useEffect(() => {
+        if (data?.code === 1000) {
+            const { result: { userIdx, name, jwt } } = data;
+            localStorage.setItem("weKurlyuser", JSON.stringify({ userIdx, name }));
+            dispatch(login({ userIdx, name }));
+            cookies.set("weKurly_access_token", jwt, { sameSite: 'strict' });
+            router.push("/");
+        }
+    }, [data])
+
     return (
         <div className="w-full  h-[100vh]">
             <div className="w-full p-10 pb-48 flex justify-center items-center ">
@@ -37,7 +55,11 @@ const Login = () => {
                         <span>비밀먼호 찾기</span>
                     </div>
                     <Button type="submit" backcolor='purple' text="로그인" size="middle" />
-                    <Button backcolor='white' text="회원가입" size="middle" />
+                    <Link href="/signup">
+                        <a>
+                            <Button backcolor='white' text="회원가입" size="middle" />
+                        </a>
+                    </Link>
                 </form>
             </div>
         </div>

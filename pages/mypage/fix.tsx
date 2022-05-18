@@ -1,12 +1,14 @@
 import MyInfo from '@components/MyPage/MyInfo';
 import MyInfoFix from '@components/MyPage/MyInfoFix';
 import MyNav from '@components/MyPage/MyNav';
+import SideBar from '@components/SideBar';
 import { NextPage } from 'next';
 
 const MyPointPage: NextPage = () => {
 
     return (
         <div>
+            <SideBar position="35vh" initScrollPosition={200} />
             <MyInfo />
             <div className="bg-white px-28 flex">
                 <MyNav />

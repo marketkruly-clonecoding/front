@@ -1,5 +1,6 @@
 import MyInfo from '@components/MyPage/MyInfo';
 import MyNav from '@components/MyPage/MyNav';
+import SideBar from '@components/SideBar';
 import { cls } from '@libs/cls';
 import { NextPage } from 'next';
 import { useState } from 'react';
@@ -19,6 +20,7 @@ const MyReviewPage: NextPage = () => {
     return (
         <div>
             <MyInfo />
+            <SideBar position="35vh" initScrollPosition={200} />
             <div className="bg-white px-28 flex">
                 <MyNav />
                 <div className="w-full pl-8 ">

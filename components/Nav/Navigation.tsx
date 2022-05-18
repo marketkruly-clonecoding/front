@@ -1,14 +1,26 @@
 import { cls } from '@libs/cls';
+import { RootState } from '@modules/index';
+import { login, logout } from '@modules/user';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import Logo from "../../public/images/마켓컬리.png"
 import Category from './Category';
+import Cookies from 'universal-cookie';
+import { useRouter } from 'next/router';
+
+const cookies = new Cookies();
+
 
 const Navigation = () => {
 
     const [category, setCategory] = useState(false);
     const [serviceCenter, setServiceCenter] = useState(false);
+    const [myInfoContainer, setMyInfoContainer] = useState(false);
+    const { user } = useSelector((state: RootState) => state.user);
+    const dispatch = useDispatch();
+    const router = useRouter();
 
     const onCategoryEnter = () => {
         setCategory(true);
@@ -26,6 +38,28 @@ const Navigation = () => {
         setServiceCenter(false);
     }
 
+    const onMyInfoMouseEnter = () => {
+        setMyInfoContainer(true);
+    }
+    const onMyInfoMouseLeave = () => {
+        setMyInfoContainer(false);
+    }
+
+    const onLogOutClick = () => {
+        cookies.remove("weKurly_access_token");
+        localStorage.removeItem("weKurlyuser");
+        dispatch(logout());
+        router.push("/");
+    }
+
+    useEffect(() => {
+        const userInStore = localStorage.getItem("weKurlyuser");
+        if (userInStore) {
+            const userInfo = JSON.parse(userInStore);
+            dispatch(login(userInfo));
+        }
+    }, [])
+
 
     return (
         <>
@@ -39,13 +73,60 @@ const Navigation = () => {
                     </a>
                 </Link>
                 <div className="text-xs space-x-3 relative">
-                    <Link href="/signup"><a className="cursor-pointer">회원가입</a></Link>
-                    <span>|</span>
-                    <Link href="/login"><a className="cursor-pointer">로그인</a></Link>
+                    {user.name ?
+                        <>
+                            <Link href="/mypage">
+                                <a onMouseEnter={onMyInfoMouseEnter} onMouseLeave={onMyInfoMouseLeave} className="cursor-pointer  p-1">
+                                    <span className="border-[1px] px-2 text-xs border-gray-600 mr-1 rounded-xl">웰컴</span>
+                                    {user.name}  님
+                                </a>
+                            </Link>
+                            {myInfoContainer ?
+                                <ul onMouseEnter={onMyInfoMouseEnter} onMouseLeave={onMyInfoMouseLeave} className="border-[1px] border-gray-300 w-28 p-2 absolute right-20 top-5 z-20 bg-white space-y-2 ">
+                                    <li className="cursor-pointer">
+                                        <Link href="/mypage"><a>주문내역</a></Link>
+                                    </li>
+                                    <li className="cursor-pointer">
+                                        <Link href="/mypage/gift"><a>선물내역</a></Link>
+                                    </li>
+                                    <li className="cursor-pointer">
+                                        <Link href="/mypage/like"><a>찜한 상품</a></Link>
+                                    </li>
+                                    <li className="cursor-pointer">
+                                        <Link href="/mypage/deliver"><a>배송지 관리</a></Link>
+                                    </li>
+                                    <li className="cursor-pointer">
+                                        <Link href="/mypage/review"><a>상품 후기</a></Link>
+                                    </li>
+                                    <li className="cursor-pointer">
+                                        <Link href="/mypage/inquiry"><a>상품 문의</a></Link>
+                                    </li>
+                                    <li className="cursor-pointer">
+                                        <Link href="/mypage/point"><a>적립금</a></Link>
+                                    </li>
+                                    <li className="cursor-pointer">
+                                        <Link href="/mypage"><a>쿠폰</a></Link>
+                                    </li>
+                                    <li className="cursor-pointer">
+                                        <Link href="/mypage/fix"><a>개인 정보 수정</a></Link>
+                                    </li>
+                                    <li onClick={onLogOutClick} className="cursor-pointer">
+                                        로그아웃
+                                    </li>
+                                </ul>
+                                : null}
+                        </>
+                        :
+                        <>
+                            <Link href="/signup"><a className="cursor-pointer">회원가입</a></Link>
+                            <span>|</span>
+                            <Link href="/login"><a className="cursor-pointer">로그인</a></Link>
+                        </>
+                    }
                     <span>|</span>
                     <span onMouseEnter={onServiceMouseEnter} onMouseLeave={onServiceMouseLeave} className="cursor-pointer p-1">고객센터</span>
                     {serviceCenter ?
-                        <ul onMouseEnter={onServiceMouseEnter} onMouseLeave={onServiceMouseLeave} className="border-2 w-28 p-2 absolute right-0 top-5 z-20 bg-white space-y-2 ">
+                        <ul onMouseEnter={onServiceMouseEnter} onMouseLeave={onServiceMouseLeave} className="border-[1px] w-28 p-2 absolute right-0 top-5 z-20 bg-white space-y-2 ">
                             <li className="cursor-pointer">공지사항</li>
                             <li className="cursor-pointer">자주하는 질문</li>
                             <li className="cursor-pointer">1:1문의</li>
