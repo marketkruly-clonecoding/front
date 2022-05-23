@@ -5,9 +5,12 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react';
 import { store } from '@modules/index';
 import { Provider } from "react-redux";
+import { SWRConfig } from 'swr';
+import Cookies from "universal-cookie";
 import SideBar from '@components/SideBar';
 import { login } from '@modules/user';
 
+const cookies = new Cookies();
 
 function MyApp({ Component, pageProps }: AppProps) {
 
@@ -28,12 +31,14 @@ function MyApp({ Component, pageProps }: AppProps) {
 
 
   return (
-    <div style={{ height: `${height}` }} className={`min-w-[1250px]  w-full h-[${height}]`}>
-      <Provider store={store}>
-        <Navigation />
-        <Component {...pageProps} />
-      </Provider>
-    </div>
+    <SWRConfig value={{ fetcher: (url: string) => fetch(url, { headers: { "x-access-token": cookies.get("weKurly_access_token") } }).then(response => response.json()) }}>
+      <div style={{ height: `${height}` }} className={`min-w-[1250px]  w-full h-[${height}]`}>
+        <Provider store={store}>
+          <Navigation />
+          <Component {...pageProps} />
+        </Provider>
+      </div>
+    </SWRConfig>
 
   )
 }

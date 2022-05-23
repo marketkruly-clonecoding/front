@@ -35,8 +35,8 @@ const HomeSubSlider = ({ title, subTitle, datas }: IHomeSubSlider) => {
                         }px)`
                 }} className="flex transition ease-in-out duration-300">
                     {
-                        datas.map(item =>
-                            <li className="pr-[18px] space-y-2">
+                        datas.map((item, index) =>
+                            <li key={index} className="pr-[18px] space-y-2">
                                 <div className="w-[250px] h-[318px] bg-gray-400" />
                                 <div>[네떼] 부드러운 샐러드 65g</div>
                                 <div>1,700원</div>

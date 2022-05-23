@@ -1,24 +1,64 @@
 export interface Product {
   product_idx: number;
-  create_at: Date;
-  update_at: Date;
-  delete_yn: string;
-  category_idx: number;
-  brand_idx: number;
-  discount: number;
-  discount_price: number;
-  price: number;
+  brand_name: string;
   name: string;
   subname: string;
+  price: string;
+  discount: string;
+  discount_price: string;
+  is_kurlyonly: string;
+  sales_count: number;
+  url: string;
+}
+
+export interface ProductDetail {
+  product_idx: number;
+  brand_name: string;
+  name: string;
+  subname: string;
+  price: number;
+  discount: number;
+  discount_price: number;
   sales_unit: string;
   weight: string;
-  type: string;
-  packaging_gype: string;
-  Allergie_info: string;
-  distinct_delivery: string;
   source: string;
+  type: string;
+  packaging_type: string;
+  distinct_deliver: string;
   notice: string;
-  desc_html: string;
+  shelf_life: string;
+  url: string;
+  allergie_info: string;
+
+  // create_at: Date;
+  // update_at: Date;
+  // delete_yn: string;
+  // category_idx: number;
+  // brand_idx: number;
+
+  // desc_html: string;
+}
+
+export interface ProductList {
+  name: string;
+  origin_price: number;
+  discount_price: number;
+  save_point_yn: string;
+}
+
+export interface ProductUserInfo {
+  user_islike: number;
+  review_cnt: number;
+}
+
+export interface ProductReview {
+  review_idx: number;
+  review_title: string;
+  review_desc: string;
+  update_at: string;
+  user_name: string;
+  views: number;
+  help_count: number;
 }
 
 export interface ProductImage {
@@ -36,15 +76,6 @@ export interface ProductDetailList {
   index: number;
 }
 
-export interface ProductReview {
-  review_idx: number;
-  review_desc: string;
-  user_idx: number;
-  product_idx: number;
-  create_at: Date;
-  update_at: Date;
-  delete_yn: string;
-}
 export interface ProductQnA {
   qna_idx: number;
   product_idx: number;

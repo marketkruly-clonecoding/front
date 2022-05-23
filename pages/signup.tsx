@@ -49,7 +49,7 @@ const SignUp = () => {
     const [pwdWarningInfo, setPwdWarningInfo] = useState(false);
     const [pwd2WarningInfo, setPwd2WarningInfo] = useState(false);
 
-
+    const router = useRouter();
 
     const [idOverlap, setIdOverlap] = useState(false);
     const [emailOverlap, setEmailOverlap] = useState(false);
@@ -165,7 +165,7 @@ const SignUp = () => {
 
     useEffect(() => {
         if (data && data.code === 1000) {
-            useRouter().push("/login");
+            router.push("/login");
         }
     }, [data])
 

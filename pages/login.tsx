@@ -35,9 +35,10 @@ const Login = () => {
     useEffect(() => {
         if (data?.code === 1000) {
             const { result: { userIdx, name, jwt } } = data;
+            console.log(jwt);
             localStorage.setItem("weKurlyuser", JSON.stringify({ userIdx, name }));
             dispatch(login({ userIdx, name }));
-            cookies.set("weKurly_access_token", jwt, { sameSite: 'strict' });
+            cookies.set("weKurly_access_token", jwt, { sameSite: 'lax' });
             router.push("/");
         }
     }, [data])

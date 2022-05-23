@@ -45,6 +45,39 @@ interface ICategoryItemKey {
   animal: string;
   baby: string;
 }
+interface ImainCategoryApiId {
+  [key: string]: number;
+  vegetables: number;
+  fruit: number;
+  fish: number;
+  meat: number;
+  main: number;
+  salad: number;
+  drink: number;
+}
+
+interface IsubCategoryApiId {
+  [key: string]: number[];
+  vegetables: number[];
+  fruit: number[];
+  fish: number[];
+}
+
+export const mainCategoryApiId: ImainCategoryApiId = {
+  vegetables: 1,
+  fruit: 2,
+  fish: 3,
+  meat: 4,
+  main: 5,
+  salad: 6,
+  drink: 7,
+};
+
+export const subCategoryApiId: IsubCategoryApiId = {
+  vegetables: [14, 12, 13, 15, 19, 20, 21, 22],
+  fruit: [16, 25, 17, 18, 26, 27, 29, 30],
+  fish: [8, 9, 10, 11],
+};
 
 export const categoryIdKey: ICategoryItemKey = {
   vegetables: "채소",

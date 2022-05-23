@@ -3,24 +3,43 @@ import { RootState } from '@modules/index';
 import { login, logout } from '@modules/user';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Logo from "../../public/images/마켓컬리.png"
 import Category from './Category';
 import Cookies from 'universal-cookie';
 import { useRouter } from 'next/router';
+import { useForm } from 'react-hook-form';
 
 const cookies = new Cookies();
 
+
+interface ISearchForm {
+    search: string;
+}
 
 const Navigation = () => {
 
     const [category, setCategory] = useState(false);
     const [serviceCenter, setServiceCenter] = useState(false);
     const [myInfoContainer, setMyInfoContainer] = useState(false);
+
+    const { register, handleSubmit, reset } = useForm<ISearchForm>();
+
     const { user } = useSelector((state: RootState) => state.user);
+
+
     const dispatch = useDispatch();
     const router = useRouter();
+
+
+
+    const onValid = ({ search }: ISearchForm) => {
+        router.push(`/${search}`);
+        reset();
+
+    }
+
 
     const onCategoryEnter = () => {
         setCategory(true);
@@ -150,10 +169,14 @@ const Navigation = () => {
                 <li className="cursor-pointer hover:text-purple-800">알뜰쇼핑</li>
                 <li className="cursor-pointer hover:text-purple-800">특가/혜택</li>
                 <li className="cursor-pointer flex  p-2 px-4 rounded-2xl bg-gray-100  ">
-                    <input className="outline-none text-xs mr-2 w-[170px] bg-gray-100" placeholder="검색어를 입력해주세요" />
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+                    <form onSubmit={handleSubmit(onValid)}>
+                        <input {...register("search", { required: true })} className="outline-none text-xs mr-2 w-[170px] bg-gray-100" placeholder="검색어를 입력해주세요" />
+                        <button>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </button>
+                    </form>
                 </li>
                 <li className=" cursor-pointer  flex justify-between space-x-5 ">
                     <svg xmlns="http://www.w3.org/2000/svg" className="hover:text-purple-800 h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -163,9 +186,13 @@ const Navigation = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" className=" hover:text-purple-800 h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="hover:text-purple-800 h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
+                    <Link href={"/cart"}>
+                        <a>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="hover:text-purple-800 h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                        </a>
+                    </Link>
                 </li>
             </ul>
 

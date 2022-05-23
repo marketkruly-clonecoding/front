@@ -1,11 +1,24 @@
+import StoreInCart from '@components/Cart/StoreInCart';
+import { Product } from '@libs/types';
+import { ISearch } from 'pages/[id]';
+import { useSelector } from 'react-redux';
 import ImageItem from './ImageItem';
 
-const ImagesBox = () => {
+
+
+
+interface IImagesBox {
+    productsInfo: any[];
+}
+
+const ImagesBox = ({ productsInfo }: any) => {
+
+
 
     return (
         <div>
             <header className="py-4 flex justify-between text-xs">
-                <div>총 46개</div>
+                <div>{productsInfo && productsInfo[0]}개</div>
                 <ul className="flex space-x-2 text-gray-400">
                     <li>추천순</li>
                     <span> | </span>
@@ -22,7 +35,7 @@ const ImagesBox = () => {
             </header>
             <main className=" ">
                 <ul className="grid gap-10 grid-cols-3">
-                    {[1, 2, 3, 4, 5, 6].map(item => <ImageItem />)}
+                    {productsInfo && productsInfo[1].map((item: Product, index: number) => <ImageItem key={index} data={item} />)}
                 </ul>
                 <div className="flex  justify-center mt-24">
                     <button className="border-2 p-2 w-9 h-9 flex justify-center items-center">
@@ -36,7 +49,7 @@ const ImagesBox = () => {
                         </svg>
                     </button>
                     <ul className="flex">
-                        {[1, 2, 3, 4, 5, 6].map((number, index) => <li className=" 
+                        {productsInfo && Array.from({ length: Math.ceil(productsInfo[0] / 6) }, (v, i) => i + 1).map((number, index) => <li key={index} className=" 
                          cursor-pointer flex justify-center items-center text-sm border-2 p-2 w-9 h-9">
                             {index + 1}
                         </li>)}
@@ -48,11 +61,12 @@ const ImagesBox = () => {
                     </button>
                     <button className="border-2 p-2 w-9 h-9  flex justify-center items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                            <path stroke-linecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
                         </svg>
                     </button>
                 </div>
             </main>
+
         </div>
     )
 }

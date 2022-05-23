@@ -1,5 +1,4 @@
 import execDaumPostcode from '@libs/execDaumPostcode';
-import { inputSelectAddress } from '@modules/user';
 import Script from 'next/script';
 import { ISignUpForm } from 'pages/signup';
 import { useEffect, useState } from 'react';
