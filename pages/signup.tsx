@@ -30,6 +30,7 @@ interface SignUpSubmit {
     phone: string;
     sex?: "M" | "G",
     birth: string;
+    address_main: string;
     address_desc: string;
 
 }
@@ -56,8 +57,6 @@ const SignUp = () => {
     const [phoneOverlap, setPhoneOverlap] = useState(false);
 
     const [mutate, { data, loading, error: dataError }] = useMutate("http://prod.hiimpedro.site:9000/app/users/join");
-    const [checkMutate, { data: checkData, loading: checkLoading, error: checkError }] = useMutate("http://prod.hiimpedro.site:9000/app/users/join/check");
-
 
     const overlapCheck = (key: string, data: string) => {
 
@@ -154,7 +153,8 @@ const SignUp = () => {
             phone: data.phone,
             sex: data.sex === "man" ? "M" : "G",
             birth: data.birth_year + " " + data.birth_month + " " + data.birth_day,
-            address_desc: data.address_main + " " + data.address_sub
+            address_main: data.address_main,
+            address_desc: data.address_sub
         }
         if (data.sex === "no") {
             delete postData.sex;

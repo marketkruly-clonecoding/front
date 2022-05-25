@@ -10,6 +10,7 @@ import Category from './Category';
 import Cookies from 'universal-cookie';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
+import StoreAlarm from '@components/Cart/StoreAlarm';
 
 const cookies = new Cookies();
 
@@ -26,7 +27,7 @@ const Navigation = () => {
 
     const { register, handleSubmit, reset } = useForm<ISearchForm>();
 
-    const { user } = useSelector((state: RootState) => state.user);
+    const { user: { user }, cartAlarmInfo } = useSelector((state: RootState) => ({ user: state.user, cartAlarmInfo: state.product.cartAlarmInfo }));
 
 
     const dispatch = useDispatch();
@@ -156,7 +157,7 @@ const Navigation = () => {
                         : null}
                 </div>
             </div>
-            <ul className="w-full sticky top-0 bg-white z-10 flex items-center px-28 space-x-10 shadow-lg">
+            <ul className="w-full sticky top-0 bg-white z-30 flex items-center px-28 space-x-10 shadow-lg">
                 <li onMouseEnter={onCategoryEnter} onMouseLeave={onCategoryMouseLeave} className="flex relative   py-4  cursor-pointer hover:text-purple-800">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -178,7 +179,7 @@ const Navigation = () => {
                         </button>
                     </form>
                 </li>
-                <li className=" cursor-pointer  flex justify-between space-x-5 ">
+                <li className="relative cursor-pointer  flex justify-between space-x-5 ">
                     <svg xmlns="http://www.w3.org/2000/svg" className="hover:text-purple-800 h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -193,6 +194,7 @@ const Navigation = () => {
                             </svg>
                         </a>
                     </Link>
+                    {cartAlarmInfo ? <StoreAlarm info={cartAlarmInfo} /> : null}
                 </li>
             </ul>
 

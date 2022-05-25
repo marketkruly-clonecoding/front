@@ -14,7 +14,7 @@ import { useSelector } from 'react-redux';
 const CategoryDetail = ({ result }: any) => {
 
     const router = useRouter();
-    const { cartWindowInfoInList } = useSelector((state: RootState) => state.product);
+    const { cartWindow } = useSelector((state: RootState) => state.product);
     if (router.isFallback) {
         return <div>로딩중</div>
     }
@@ -44,7 +44,7 @@ const CategoryDetail = ({ result }: any) => {
             </ul>
             <ImagesBox productsInfo={result.result} />
             <SideBar position="30vh" initScrollPosition={150} />
-            {cartWindowInfoInList ? <StoreInCart info={cartWindowInfoInList} /> : null}
+            {cartWindow ? <StoreInCart info={cartWindow} /> : null}
         </div>
     )
 

@@ -1,14 +1,16 @@
-import { Product } from "@libs/types";
+import { Product, ProductDetail, ProductList } from "@libs/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface ProductState {
   recentViewList: { url: string; id: number }[];
-  cartWindowInfoInList: null | Product;
+  cartAlarmInfo: null | Product | ProductDetail; // Alarm
+  cartWindow: [Info: Product, ListInfo: [] | ProductList[]] | null;
 }
 
 const initialState: ProductState = {
   recentViewList: [],
-  cartWindowInfoInList: null,
+  cartAlarmInfo: null,
+  cartWindow: null,
 };
 
 export const productSlice = createSlice({
@@ -40,11 +42,20 @@ export const productSlice = createSlice({
       state.recentViewList = newViewList;
       localStorage.setItem("wekurlyRecentList", JSON.stringify(newViewList));
     },
-    openCartWindow: (state, action: PayloadAction<Product>) => {
-      state.cartWindowInfoInList = action.payload;
+    openCartAlarm: (state, action: PayloadAction<Product | ProductDetail>) => {
+      state.cartAlarmInfo = action.payload;
+    },
+    closeCartAlarm: (state) => {
+      state.cartAlarmInfo = null;
+    },
+    openCartWindow: (
+      state,
+      action: PayloadAction<[Info: Product, ListInfo: [] | ProductList[]]>
+    ) => {
+      state.cartWindow = action.payload;
     },
     closeCartWindow: (state) => {
-      state.cartWindowInfoInList = null;
+      state.cartWindow = null;
     },
   },
 });
@@ -52,6 +63,8 @@ export const productSlice = createSlice({
 export const {
   addRecentviewList,
   initRecentviewList,
+  openCartAlarm,
+  closeCartAlarm,
   openCartWindow,
   closeCartWindow,
 } = productSlice.actions;

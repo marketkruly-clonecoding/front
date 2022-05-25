@@ -1,5 +1,5 @@
 import StoreInCart from '@components/Cart/StoreInCart';
-import { Product } from '@libs/types';
+import { Product, ProductList } from '@libs/types';
 import { ISearch } from 'pages/[id]';
 import { useSelector } from 'react-redux';
 import ImageItem from './ImageItem';
@@ -35,7 +35,7 @@ const ImagesBox = ({ productsInfo }: any) => {
             </header>
             <main className=" ">
                 <ul className="grid gap-10 grid-cols-3">
-                    {productsInfo && productsInfo[1].map((item: Product, index: number) => <ImageItem key={index} data={item} />)}
+                    {productsInfo && productsInfo[1].map((item: [Info: Product, ListInfo: [] | ProductList[]], index: number) => <ImageItem key={index} data={item} />)}
                 </ul>
                 <div className="flex  justify-center mt-24">
                     <button className="border-2 p-2 w-9 h-9 flex justify-center items-center">

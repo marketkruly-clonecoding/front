@@ -1,5 +1,7 @@
 import { prepareServerlessUrl } from "next/dist/server/base-server";
 import { useState } from "react";
+import Cookies from "universal-cookie";
+const cookies = new Cookies();
 
 interface IUseMutateState<T> {
   loading: boolean;
@@ -22,6 +24,7 @@ const useMutate = <T = any>(url: string): useMutationResult<T> => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "x-access-token": cookies.get("weKurly_access_token"),
       },
       body: JSON.stringify(data),
     })

@@ -1,39 +1,201 @@
 
 import CartItem from '@components/Cart/CartItem';
+import { cls } from '@libs/cls';
+import { AddressInCartInfo, ICartItem } from '@libs/types';
+import { RootState } from '@modules/index';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import useSWR from 'swr';
+
+
+interface ICartInfoResult {
+    code: number;
+    isSuccess: boolean;
+    message: string;
+    result: [CartItem: ICartItem[], Addres: AddressInCartInfo[]]
+}
+
+interface IDataKinds {
+    freezer: ICartItem[], // 냉동
+    fridge: ICartItem[] // 냉장        
+}
 
 const Cart = () => {
+
+    const { user } = useSelector((state: RootState) => state.user);
+    const { data, mutate } = useSWR<ICartInfoResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Cart`);
+    const [dataKinds] = useState<IDataKinds>({ freezer: [], fridge: [] });
+    const [checkIdxArr, setCheckIdxArr] = useState<number[]>([]);
+    const [kindBtns, setKindBtns] = useState({ freezer: true, fridge: true });
+
+    console.log(data);
+
+    const getFindLikeAddress = () => {
+        const likeAddress = data?.result[1].find(item => item.is_like === "Y");
+        if (!likeAddress) return "";
+
+        return likeAddress.address_main + " " + likeAddress.address_desc
+    }
+
+    const getAllPrice = () => {
+
+        let originPrice = 0;
+        let discountPrice = 0;
+        if (data?.result[0].length) {
+            const { result } = data;
+            for (let i = 0; i < result[0].length; i++) {
+                if (!checkIdxArr.includes(i)) continue;
+                originPrice += (+result[0][i].price * result[0][i].product_amount);
+                discountPrice = discountPrice + (+result[0][i].discount_price ? +result[0][i].discount_price : +result[0][i].price) * result[0][i].product_amount;
+            }
+
+        }
+        return { originPrice, discountAmount: originPrice - discountPrice, discountPrice }
+    }
+
+
+
+    const onArrowToggleClick = (key: "freezer" | "fridge") => () => {
+
+        setKindBtns(prev => ({ ...prev, [key]: !prev[key] }));
+    }
+
+    const isAllInCheckArr = () => checkIdxArr.length === data?.result[0].length;
+
+    const onAllCheckClick = () => {
+        if (!data) return;
+        if (!isAllInCheckArr()) {
+            setCheckIdxArr(Array.from({ length: data.result[0].length }, (v, i) => i));
+        } else {
+            setCheckIdxArr([]);
+        }
+    }
+
+
+
+    const onFreezerOrFridgeBoxClick = (e: React.MouseEvent) => {
+        const checkBtn = (e.target as HTMLElement).closest("[data-check]") as HTMLElement;
+        const plusBtn = (e.target as HTMLElement).closest("[data-plus]") as HTMLElement;
+        const minusBtn = (e.target as HTMLElement).closest("[data-minus]") as HTMLElement;
+        if (!data || data?.result[0].length === 0) return;
+
+        if (checkBtn) {
+            const { dataset: { check } } = checkBtn;
+            if (!check) return;
+            const newCheckArr = [...checkIdxArr];
+            const index = newCheckArr.findIndex(item => item === +check);
+            if (index !== -1) {
+                newCheckArr.splice(index, 1);
+            } else {
+                newCheckArr.push(+check);
+            }
+            setCheckIdxArr(newCheckArr);
+        }
+        if (plusBtn) {
+            const { dataset: { plus } } = plusBtn;
+            if (!plus) return;
+            const newResult = [...data.result[0]];
+            const newCheckArr = { ...data.result[0][+plus], product_amount: data.result[0][+plus].product_amount + 1 };
+            newResult[+plus] = newCheckArr;
+            mutate(prev => ({ ...prev!, result: [[...newResult], [...prev!.result[1]]] }), false);
+
+        }
+        if (minusBtn) {
+            const { dataset: { minus } } = minusBtn;
+            if (!minus) return;
+            if (data.result[0][+minus].product_amount === 1) return;
+            const newResult = [...data.result[0]];
+            const newCheckArr = { ...data.result[0][+minus], product_amount: data.result[0][+minus].product_amount - 1 };
+            newResult[+minus] = newCheckArr;
+            mutate(prev => ({ ...prev!, result: [newResult, prev!.result[1]] }), false);
+        }
+    }
+
+
+
+
 
     return (
         <div className="px-28 pt-10">
             <h1 className="text-3xl text-center">장바구니</h1>
             <div className="grid grid-cols-[7fr_3fr]">
                 <div>
-                    <div className="flex  text-sm font-semibold text-gray-600 pt-16 pb-3">
-                        <button className="mr-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="text-gray-300 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </button>
-                        <div>
-                            전체선택
-                            (0/5)
+                    <div className="flex items-center  text-sm font-semibold text-gray-600 pt-16 pb-3">
+                        <div className="flex cursor-pointer items-center" onClick={onAllCheckClick} >
+                            <button className={cls(isAllInCheckArr() ? "bg-purple-800" : "", "mr-2 border-2 rounded-full p-1")}>
+                                <svg xmlns="http://www.w3.org/2000/svg" className={cls(isAllInCheckArr() ? "text-white" : "", "h-5 w-5")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </button>
+                            <div className="select-none" >
+                                전체선택
+                                {checkIdxArr.length}/{data?.result[0].length}
+                            </div>
                         </div>
                         <span className="mx-5">|</span>
                         <div>선택삭제</div>
                     </div>
-                    <CartItem />
-                    <CartItem />
-                    <CartItem />
-                    <CartItem />
-                    <div className="flex border-t-2  text-sm font-semibold text-gray-600 pt-5 pb-3">
-                        <button className="mr-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="text-gray-300 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </button>
-                        <div>
-                            전체선택
-                            (0/5)
+                    {
+                        data?.result[0].filter(item => item.type !== "냉장").length ?
+                            <div>
+                                <div className="flex justify-between items-center border-t-2 border-black py-3">
+                                    <h2 className="text-lg">🧊<span className="font-semibold">냉동상품</span></h2>
+                                    <button onClick={onArrowToggleClick("freezer")}>
+                                        {kindBtns.freezer ?
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                                            </svg>
+                                            :
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        }
+                                    </button>
+                                </div>
+                                {kindBtns.freezer ?
+                                    <div onClick={onFreezerOrFridgeBoxClick}>
+                                        {data?.result[0].filter(item => item.type !== "냉장").map((item, index) => <CartItem key={index} index={index} info={item} checkIdxArr={checkIdxArr} />)}
+                                    </div>
+                                    : null
+                                }
+                            </div> : null
+                    }
+                    {
+                        data?.result[0].filter(item => item.type === "냉장").length ?
+                            <div>
+                                <div className="flex justify-between items-center border-t-2 border-black py-3">
+                                    <h2 className="text-lg">💧 <span className="font-semibold">냉장상품</span></h2>
+                                    <button onClick={onArrowToggleClick("fridge")}>
+                                        {kindBtns.fridge ?
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                                            </svg>
+                                            :
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        }
+                                    </button>
+                                </div>
+                                {kindBtns.fridge ?
+                                    <div onClick={onFreezerOrFridgeBoxClick}>
+                                        {data?.result[0].filter(item => item.type === "냉장").map((item, index) => <CartItem key={index} index={index} info={item} checkIdxArr={checkIdxArr} />)}
+                                    </div>
+                                    : null
+                                }
+                            </div> : null
+                    }
+                    <div className="flex items-center  border-t-2  text-sm font-semibold text-gray-600 pt-5 pb-3">
+                        <div className="flex cursor-pointer items-center" onClick={onAllCheckClick} >
+                            <button className={cls(isAllInCheckArr() ? "bg-purple-800" : "", "mr-2 border-2 rounded-full p-1")}>
+                                <svg xmlns="http://www.w3.org/2000/svg" className={cls(isAllInCheckArr() ? "text-white" : "", "h-5 w-5")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </button>
+                            <div className="select-none" >
+                                전체선택
+                                {checkIdxArr.length}/{data?.result[0].length}
+                            </div>
                         </div>
                         <span className="mx-5">|</span>
                         <div>선택삭제</div>
@@ -49,16 +211,16 @@ const Cart = () => {
                             <span className="ml-2 mb-3">배송지</span>
                         </div>
                         <div>
-                            경기 안산시 상록구 해양4로 31 (그랑시티자이) 그랑시티자이 1차 109동 2101호
+                            {getFindLikeAddress()}
                             <div className="mt-2 text-sm text-purple-800">샛별배송</div>
                         </div>
                         <button className="border-[1px] rounded-sm text-sm mt-2 py-1 border-purple-800 text-purple-800 w-full">배송지 변경</button>
                     </div>
                     <div className="p-5 bg-gray-100 text-lg">
-                        <div className="flex justify-between py-2"><span>상품금액</span><span>0원</span></div>
-                        <div className="flex justify-between py-2"><span>상품금액</span><span>0원</span></div>
-                        <div className="flex justify-between py-2"><span>상품금액</span><span>0원</span></div>
-                        <div className="flex justify-between border-t-2 py-5"><span>결제예정금액</span><span>0원</span></div>
+                        <div className="flex justify-between py-2"><span>상품금액</span><span>{getAllPrice().originPrice}원</span></div>
+                        <div className="flex justify-between py-2"><span>상품할인금액</span><span>{getAllPrice().discountAmount}원</span></div>
+                        <div className="flex justify-between py-2"><span>배송비</span><span>0원</span></div>
+                        <div className="flex justify-between border-t-2 py-5"><span>결제예정금액</span><span>{getAllPrice().discountPrice}원</span></div>
                     </div>
                     <button className="bg-gray-300 mt-5 w-full p-5 rounded-md text-white">
                         상품을 선택해주세요

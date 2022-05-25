@@ -29,6 +29,7 @@ export interface ProductDetail {
   shelf_life: string;
   url: string;
   allergie_info: string;
+  maxinum_purchase: string;
 
   // create_at: Date;
   // update_at: Date;
@@ -40,6 +41,7 @@ export interface ProductDetail {
 }
 
 export interface ProductList {
+  index: number;
   name: string;
   origin_price: number;
   discount_price: number;
@@ -61,6 +63,28 @@ export interface ProductReview {
   help_count: number;
 }
 
+export interface ICartItem {
+  discount_price: string;
+  idx: number;
+  name: string;
+  price: string;
+  product_amount: number;
+  product_desc: string;
+  product_idx: number;
+  type: string;
+  url: string;
+}
+
+export interface AddressInCartInfo {
+  address_main: string;
+  address_desc: string;
+  default_yn: string;
+  received_name: string;
+  received_phone: string;
+  is_like: string;
+}
+
+//------------------------------
 export interface ProductImage {
   productimage_idx: number;
   product_idx: number;

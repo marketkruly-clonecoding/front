@@ -21,10 +21,10 @@ export interface ISearch {
 
 
 const Search: NextPage<ISearch> = ({ result }) => {
-
+    console.log(result);
     const router = useRouter();
     const { register, handleSubmit } = useForm<{ search: string }>();
-    const { cartWindowInfoInList } = useSelector((state: RootState) => state.product);
+    const { cartWindow } = useSelector((state: RootState) => state.product);
 
     const onValid = ({ search }: { search: string }) => {
         router.push(`/${search}`);
@@ -44,7 +44,7 @@ const Search: NextPage<ISearch> = ({ result }) => {
                 : <ImagesBox productsInfo={result.result} />
             }
             <SideBar position="30vh" initScrollPosition={150} />
-            {cartWindowInfoInList ? <StoreInCart info={cartWindowInfoInList} /> : null}
+            {cartWindow ? <StoreInCart info={cartWindow} /> : null}
         </div>
     )
 }
