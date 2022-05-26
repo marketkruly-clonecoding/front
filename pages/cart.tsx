@@ -24,7 +24,7 @@ const Cart = () => {
 
     const { user } = useSelector((state: RootState) => state.user);
     const { data, mutate } = useSWR<ICartInfoResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Cart`);
-    const [dataKinds] = useState<IDataKinds>({ freezer: [], fridge: [] });
+
     const [checkIdxArr, setCheckIdxArr] = useState<number[]>([]);
     const [kindBtns, setKindBtns] = useState({ freezer: true, fridge: true });
 

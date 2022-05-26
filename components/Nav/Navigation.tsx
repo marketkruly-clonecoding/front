@@ -102,7 +102,7 @@ const Navigation = () => {
                                 </a>
                             </Link>
                             {myInfoContainer ?
-                                <ul onMouseEnter={onMyInfoMouseEnter} onMouseLeave={onMyInfoMouseLeave} className="border-[1px] border-gray-300 w-28 p-2 absolute right-20 top-5 z-20 bg-white space-y-2 ">
+                                <ul onMouseEnter={onMyInfoMouseEnter} onMouseLeave={onMyInfoMouseLeave} className="border-[1px] border-gray-300 w-28 p-2 absolute right-20 top-5 z-40 bg-white space-y-2 ">
                                     <li className="cursor-pointer">
                                         <Link href="/mypage"><a>주문내역</a></Link>
                                     </li>
@@ -146,7 +146,7 @@ const Navigation = () => {
                     <span>|</span>
                     <span onMouseEnter={onServiceMouseEnter} onMouseLeave={onServiceMouseLeave} className="cursor-pointer p-1">고객센터</span>
                     {serviceCenter ?
-                        <ul onMouseEnter={onServiceMouseEnter} onMouseLeave={onServiceMouseLeave} className="border-[1px] w-28 p-2 absolute right-0 top-5 z-20 bg-white space-y-2 ">
+                        <ul onMouseEnter={onServiceMouseEnter} onMouseLeave={onServiceMouseLeave} className="border-[1px] w-28 p-2 absolute right-0 top-5 z-40 bg-white space-y-2 ">
                             <li className="cursor-pointer">공지사항</li>
                             <li className="cursor-pointer">자주하는 질문</li>
                             <li className="cursor-pointer">1:1문의</li>

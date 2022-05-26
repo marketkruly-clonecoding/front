@@ -1,12 +1,27 @@
+import AddressWindow from '@components/MyPage/AddressWindow';
 import MyInfo from '@components/MyPage/MyInfo';
 import MyNav from '@components/MyPage/MyNav';
 import SideBar from '@components/SideBar';
+import execDaumPostcode from '@libs/execDaumPostcode';
 import { NextPage } from 'next';
+import Script from 'next/script';
+import { useState } from 'react';
 
 const MyDeliverPage: NextPage = () => {
 
+    const [addAddressInfo, setAddAddressInfo] = useState("");
+
+    const onAddAddressClick = () => {
+        execDaumPostcode(setAddAddressInfo);
+    }
+
+
     return (
         <div>
+            <Script
+                src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
+                strategy="beforeInteractive"
+            ></Script>
             <SideBar position="35vh" initScrollPosition={200} />
             <MyInfo />
             <div className="bg-white px-28 flex">
@@ -17,7 +32,7 @@ const MyDeliverPage: NextPage = () => {
                             <h1 className="text-xl font-semibold">배송지 관리</h1>
                             <h3 className="text-xs font-semibold ml-3 text-gray-600">배송지에 따라 상품정보 및 배송유형이 달라질 수 있습니다.</h3>
                         </div>
-                        <button className="flex items-center space-x-2" >
+                        <button onClick={onAddAddressClick} className="flex items-center space-x-2" >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                             </svg>
@@ -55,6 +70,7 @@ const MyDeliverPage: NextPage = () => {
                     </ul>
                 </div>
             </div>
+            {addAddressInfo ? <AddressWindow info={addAddressInfo} setAddAddressInfo={setAddAddressInfo} /> : null}
         </div>
     )
 }
