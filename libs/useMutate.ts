@@ -11,7 +11,10 @@ interface IUseMutateState<T> {
 
 type useMutationResult<T> = [(data: any) => void, IUseMutateState<T>];
 
-const useMutate = <T = any>(url: string): useMutationResult<T> => {
+const useMutate = <T = any>(
+  url: string,
+  patch = false
+): useMutationResult<T> => {
   const [state, setState] = useState<IUseMutateState<T>>({
     loading: false,
     data: undefined,
@@ -21,7 +24,7 @@ const useMutate = <T = any>(url: string): useMutationResult<T> => {
   function mutate(data: any) {
     setState((prev) => ({ ...prev, loading: true }));
     fetch(url, {
-      method: "POST",
+      method: !patch ? "POST" : "PATCH",
       headers: {
         "Content-Type": "application/json",
         "x-access-token": cookies.get("weKurly_access_token"),

@@ -1,28 +1,41 @@
 import Button from '@components/Button';
 import { cls } from '@libs/cls';
 import execDaumPostcode from '@libs/execDaumPostcode';
+import useMutate from '@libs/useMutate';
+import { RootState } from '@modules/index';
+import { IGetAddressResult } from 'pages/mypage/deliver';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useSelector } from 'react-redux';
+import { KeyedMutator } from 'swr';
 
 interface IAddressWindow {
     info: string;
     setAddAddressInfo: Dispatch<SetStateAction<string>>;
+    addressMutate: KeyedMutator<IGetAddressResult>
 }
 
 interface IAddressForm {
-    address: string;
-    addressDesc: string;
+    address_main: string;
+    address_desc: string;
 }
 
+interface IAddressSubmit extends IAddressForm {
+    default_yn: "Y" | "N";
+}
 
-const AddressWindow = ({ info, setAddAddressInfo }: IAddressWindow) => {
+const AddressWindow = ({ info, setAddAddressInfo, addressMutate }: IAddressWindow) => {
 
     const { register, handleSubmit, watch, setValue } = useForm<IAddressForm>();
     const [defaultCheck, setDefaultCheck] = useState(false);
-
+    const { user } = useSelector((state: RootState) => state.user);
+    const [mutate] = useMutate(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Address`);
 
     const onValid = (data: IAddressForm) => {
-        console.log(data);
+        const submitData: IAddressSubmit = { ...data, default_yn: defaultCheck ? "Y" : "N" };
+        mutate(submitData);
+        setAddAddressInfo("");
+        addressMutate((prev) => ({ ...prev!, result: [...prev!.result, { ...submitData, address_idx: -1, is_like: "N", recevied_name: "", recevied_phone: "" }] }));
     }
 
     const onDefaultToggleClick = () => {
@@ -38,7 +51,7 @@ const AddressWindow = ({ info, setAddAddressInfo }: IAddressWindow) => {
     }
 
     useEffect(() => {
-        setValue("address", info);
+        setValue("address_main", info);
     }, [info]);
 
 
@@ -55,10 +68,10 @@ const AddressWindow = ({ info, setAddAddressInfo }: IAddressWindow) => {
             <div>
                 <form onSubmit={handleSubmit(onValid)} className="flex flex-col space-y-3 mt-10">
                     <div className="grid grid-cols-[3fr_1fr] gap-x-2">
-                        <input {...register("address", { required: true })} className="p-2 rounded-sm border-2" type="text" />
+                        <input {...register("address_main", { required: true })} className="p-2 rounded-sm border-2" type="text" />
                         <button onClick={onReSearchAddress} className="rounded-sm border-2 border-purple-800 text-purple-800">재검색</button>
                     </div>
-                    <input {...register("addressDesc", { required: true })} className="w-full border-2 p-2 rounded-sm" type="text" />
+                    <input {...register("address_desc", { required: true })} className="w-full border-2 p-2 rounded-sm" type="text" />
                     <button onClick={onDefaultToggleClick} className="flex items-center space-x-2" type="button">
                         <div className={cls(defaultCheck ? "bg-purple-800" : "", "border-2 rounded-full p-1 ")}>
                             <svg xmlns="http://www.w3.org/2000/svg" className={cls(defaultCheck ? "text-white" : "", "h-5 w-5")} viewBox="0 0 20 20" fill="currentColor">

@@ -1,20 +1,56 @@
+import AddressFix from '@components/MyPage/AddressFix';
 import AddressWindow from '@components/MyPage/AddressWindow';
 import MyInfo from '@components/MyPage/MyInfo';
 import MyNav from '@components/MyPage/MyNav';
 import SideBar from '@components/SideBar';
 import execDaumPostcode from '@libs/execDaumPostcode';
+import { RootState } from '@modules/index';
+import { time } from 'console';
 import { NextPage } from 'next';
 import Script from 'next/script';
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import useSWR from 'swr';
+
+export interface IAddressInfo {
+    address_desc: string;
+    address_idx: number;
+    address_main: string;
+    default_yn: "Y" | "N";
+    is_like: "Y" | "N";
+    recevied_name: string;
+    recevied_phone: string;
+}
+
+export interface IGetAddressResult {
+    code: number;
+    isSuccess: boolean;
+    message: string;
+    result: IAddressInfo[];
+}
 
 const MyDeliverPage: NextPage = () => {
 
     const [addAddressInfo, setAddAddressInfo] = useState("");
+    const [fixAddressInfo, setFixAddressInfo] = useState<IAddressInfo | null>(null);
+    const { user } = useSelector((state: RootState) => state.user);
+    const { data, mutate } = useSWR<IGetAddressResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Address`);
+    console.log(data);
+
 
     const onAddAddressClick = () => {
         execDaumPostcode(setAddAddressInfo);
     }
 
+    const onFixAddressClick = (e: React.MouseEvent) => {
+        const fixBtn = (e.target as Element).closest("[data-id]") as HTMLElement;
+        if (fixBtn) {
+            const { dataset: { id } } = fixBtn;
+            if (!data?.result || !id) return;
+            setFixAddressInfo(data.result[+id]);
+        }
+
+    }
 
     return (
         <div>
@@ -39,7 +75,7 @@ const MyDeliverPage: NextPage = () => {
                             <div>새 배송지 추가</div>
                         </button>
                     </header>
-                    <ul className="">
+                    <ul onClick={onFixAddressClick} className="">
                         <li className="grid grid-cols-[1fr_5fr_1.5fr_1.5fr_1.5fr_1fr] py-5 justify-items-center border-b-[1px] border-black">
                             <span>선택</span>
                             <span>주소</span>
@@ -48,29 +84,33 @@ const MyDeliverPage: NextPage = () => {
                             <span>배송유형</span>
                             <span>수정</span>
                         </li>
-                        <li className="border-b-[1px] grid grid-cols-[1fr_5fr_1.5fr_1.5fr_1.5fr_1fr] py-5 justify-items-center items-center">
-                            <button>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </button>
-                            <div>
-                                <div className="text-xs rounded-xl bg-gray-100 w-20 text-center py-1 mb-2 text-gray-500 font-semibold">기본 배송지</div>
-                                <div>경기 안산시 상록구 해양4로 31(그랑시티자이) 그랑시티자이 1차 109동 2101호</div>
-                            </div>
-                            <div></div>
-                            <div></div>
-                            <div className="text-purple-800 text-sm font-semibold">샛별배송</div>
-                            <button>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                </svg>
-                            </button>
-                        </li>
+                        {data?.result.map((item, index) =>
+                            <li key={index} className="cursor-pointer border-b-[1px] grid grid-cols-[1fr_5fr_1.5fr_1.5fr_1.5fr_1fr] py-5 justify-items-center items-center">
+                                <button >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </button>
+                                <div className="justify-self-start">
+                                    {item.default_yn === "Y" ? <div className="text-xs rounded-xl bg-gray-100 w-20 text-center py-1 mb-2 text-gray-500 font-semibold">기본 배송지</div> : null}
+                                    <div>{item.address_main + " " + item.address_desc}</div>
+                                </div>
+                                <div className="text-sm">{item.recevied_name && item.recevied_name}</div>
+                                <div className="text-sm">
+                                    {item.recevied_phone && item.recevied_phone.substring(0, 3) + "-" + item.recevied_phone.substring(3, 7) + "-" + item.recevied_phone.substring(7)}</div>
+                                <div className="text-purple-800 text-sm font-semibold">샛별배송</div>
+                                <button data-id={index}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
+                            </li>)}
                     </ul>
                 </div>
             </div>
-            {addAddressInfo ? <AddressWindow info={addAddressInfo} setAddAddressInfo={setAddAddressInfo} /> : null}
+            {addAddressInfo ? <AddressWindow addressMutate={mutate} info={addAddressInfo} setAddAddressInfo={setAddAddressInfo} /> : null}
+            {fixAddressInfo ? <AddressFix addressMutate={mutate} fixAddressInfo={fixAddressInfo} setFixAddressInfo={setFixAddressInfo} /> : null}
+
         </div>
     )
 }
