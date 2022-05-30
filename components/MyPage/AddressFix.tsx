@@ -1,6 +1,7 @@
 import { cls } from '@libs/cls';
 import useMutate from '@libs/useMutate';
 import { RootState } from '@modules/index';
+import { ICartInfoResult } from 'pages/cart';
 import { IAddressInfo, IGetAddressResult } from 'pages/mypage/deliver';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -18,20 +19,25 @@ interface IAddressFixForm {
 interface IAddressFix {
     fixAddressInfo: IAddressInfo | null;
     setFixAddressInfo: Dispatch<SetStateAction<IAddressInfo | null>>
-    addressMutate: KeyedMutator<IGetAddressResult>
+    addressMutate: KeyedMutator<IGetAddressResult> | KeyedMutator<ICartInfoResult>;
+    addressListMutate?: KeyedMutator<IGetAddressResult>
 }
 
-const AddressFix = ({ setFixAddressInfo, fixAddressInfo, addressMutate }: IAddressFix) => {
+const AddressFix = ({ setFixAddressInfo, fixAddressInfo, addressMutate, addressListMutate }: IAddressFix) => {
 
     const [defaultCheck, setDefaultCheck] = useState(false);
     const { user } = useSelector((state: RootState) => state.user);
     const { register, handleSubmit, setValue } = useForm<IAddressFixForm>();
     const [mutate, { data }] = useMutate(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Address/${fixAddressInfo?.address_idx}`, true);
 
+    const [delMutate] = useMutate(`http://prod.hiimpedro.site:9000/app/address/${fixAddressInfo?.address_idx}/delete`, true);
+
     const onValid = (data: IAddressFixForm) => {
         const submitData = { ...data, default_yn: defaultCheck ? "Y" : "N" };
         mutate(submitData);
         setFixAddressInfo(null);
+        addressMutate();
+        if (addressListMutate) addressListMutate();
     }
 
     const onDefaultToggleClick = () => {
@@ -39,6 +45,12 @@ const AddressFix = ({ setFixAddressInfo, fixAddressInfo, addressMutate }: IAddre
     }
     const onCloseClick = () => {
         setFixAddressInfo(null);
+    }
+
+    const onDelClick = () => {
+        delMutate("");
+        setFixAddressInfo(null);
+        addressMutate();
     }
 
 
@@ -83,7 +95,7 @@ const AddressFix = ({ setFixAddressInfo, fixAddressInfo, addressMutate }: IAddre
                 </button>
                 <div className="space-y-2">
                     <button className="w-full  rounded-sm p-2 bg-purple-800 text-white">저장</button>
-                    <button className="w-full border-[1px] rounded-sm p-2">삭제</button>
+                    <button onClick={onDelClick} type="button" className="w-full border-[1px] rounded-sm p-2">삭제</button>
                 </div>
 
             </form>

@@ -35,7 +35,7 @@ const AddressWindow = ({ info, setAddAddressInfo, addressMutate }: IAddressWindo
         const submitData: IAddressSubmit = { ...data, default_yn: defaultCheck ? "Y" : "N" };
         mutate(submitData);
         setAddAddressInfo("");
-        addressMutate((prev) => ({ ...prev!, result: [...prev!.result, { ...submitData, address_idx: -1, is_like: "N", recevied_name: "", recevied_phone: "" }] }));
+        addressMutate();
     }
 
     const onDefaultToggleClick = () => {

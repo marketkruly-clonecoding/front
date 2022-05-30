@@ -18,7 +18,11 @@ const CartItem = ({ info, checkIdxArr, index }: ICartItemProps) => {
                 </svg>
             </button>
             <img src={info.url} className="w-[60px] h-[80px] bg-gray-400 object-fill" />
-            <h3 className="ml-5  font-semibold">{info.name}</h3>
+
+            <div className="space-y-2">
+                <h3 className="ml-5  font-semibold">{info.name}</h3>
+                {info.product_desc ? <h5 className="ml-5 text-sm text-gray-400 font-semibold">{info.product_desc}</h5> : null}
+            </div>
             <div className="border-2  mr-16   flex justify-between px-2 w-20 rounded-sm">
                 <button data-minus={index}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">

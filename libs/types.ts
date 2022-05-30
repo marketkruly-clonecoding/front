@@ -9,6 +9,7 @@ export interface Product {
   is_kurlyonly: string;
   sales_count: number;
   url: string;
+  maxminum_purchase: string;
 }
 
 export interface ProductDetail {
@@ -29,7 +30,7 @@ export interface ProductDetail {
   shelf_life: string;
   url: string;
   allergie_info: string;
-  maxinum_purchase: string;
+  maxminum_purchase: string;
 
   // create_at: Date;
   // update_at: Date;
@@ -79,8 +80,8 @@ export interface AddressInCartInfo {
   address_main: string;
   address_desc: string;
   default_yn: string;
-  received_name: string;
-  received_phone: string;
+  recevied_name: string;
+  recevied_phone: string;
   is_like: string;
 }
 

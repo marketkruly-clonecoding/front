@@ -1,9 +1,12 @@
 import { cls } from '@libs/cls';
 import { Product, ProductDetail, ProductList } from '@libs/types';
 import useMutate from '@libs/useMutate';
+import { RootState } from '@modules/index';
 import { closeCartWindow, openCartAlarm } from '@modules/product';
+import { ICartInfoResult } from 'pages/cart';
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import useSWR from 'swr';
 
 
 
@@ -11,7 +14,9 @@ import { useDispatch } from 'react-redux';
 const StoreInCart = ({ info }: { info: [Info: Product, ListInfo: [] | ProductList[]] }) => {
 
     const dispatch = useDispatch();
+    const { user } = useSelector((state: RootState) => state.user);
     const [mutate, { loading }] = useMutate(`http://prod.hiimpedro.site:9000/app/products/${info[0].product_idx || ""}/addcart`);
+    const { data, mutate: cartMutate } = useSWR<ICartInfoResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Cart`);
 
     const [buyNumbers, setBuyNumbers] = useState(info[1].length > 1 ? info[1].map(item => 1) : [1]);
 
@@ -42,6 +47,7 @@ const StoreInCart = ({ info }: { info: [Info: Product, ListInfo: [] | ProductLis
         }
         dispatch(openCartAlarm(info[0]));
         dispatch(closeCartWindow());
+        cartMutate(prev => ({ ...prev!, result: [[...prev!.result[0], { ...prev!.result[0][1] }], [...prev!.result[1]]] }), false);
     }
 
 
@@ -56,11 +62,19 @@ const StoreInCart = ({ info }: { info: [Info: Product, ListInfo: [] | ProductLis
 
         if (plusBtn) {
             if (key === "Product") {
+                if (info[0].maxminum_purchase && +info[0].maxminum_purchase <= buyNumbers[0]) {
+                    alert(`최대 ${info[0].maxminum_purchase}개 까지입니다.`)
+                    return;
+                }
                 setBuyNumbers(prev => [prev[0] + 1]);
 
             } else if (key === "List") {
                 const { dataset: { plus } } = plusBtn;
                 if (!plus) return;
+                if (info[0].maxminum_purchase && +info[0].maxminum_purchase <= buyNumbers[+plus]) {
+                    alert(`최대 ${info[0].maxminum_purchase}개 까지입니다.`)
+                    return;
+                }
                 setBuyNumbers(prev => {
                     const newArr = [...prev];
                     newArr[+plus] += 1;

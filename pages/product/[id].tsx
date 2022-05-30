@@ -34,6 +34,7 @@ const ProductDetail: NextPage = () => {
     const { data, mutate: productInfoMutate } = useSWR<IProductDetailResult>(`http://prod.hiimpedro.site:9000/app/products/${router.query.id ? router.query.id : ""}`);
     console.log(data);
     const [mutate, { loading }] = useMutate(`http://prod.hiimpedro.site:9000/app/products/${router.query.id || ""}/addcart`);
+    const [likeMutate, { data: likeData, loading: likeLoading }] = useMutate(`http://prod.hiimpedro.site:9000/app/users/favorite/${data?.result[0][0].product_idx}`);
 
     const dispatch = useDispatch();
 
@@ -76,7 +77,7 @@ const ProductDetail: NextPage = () => {
         }
         if (plusBtn) {
             const { dataset: { plus } } = plusBtn;
-            const maxinum = +data.result[0][0].maxinum_purchase;
+            const maxinum = +data.result[0][0].maxminum_purchase;
             if (!plus) return;
             const newList = [...listInfo];
             if (maxinum) {
@@ -118,6 +119,7 @@ const ProductDetail: NextPage = () => {
 
 
     const onHeartClick = () => {
+        if (likeLoading) return;
         productInfoMutate(prev => ({
             ...prev!, result: [
                 [...prev!.result[0]], [...prev!.result[1]], [
@@ -128,9 +130,15 @@ const ProductDetail: NextPage = () => {
                 ], [...prev!.result[3]]
             ]
         }), false);
+        likeMutate("");
     }
 
+
     const onBuyPlusClick = () => {
+        if (+data.result[0][0].maxminum_purchase <= buyNumber) {
+            alert(`최대수량은 ${data.result[0][0].maxminum_purchase}개 입니다.`);
+            return;
+        }
         setBuyNumber(prev => prev + 1);
     }
 
@@ -138,6 +146,7 @@ const ProductDetail: NextPage = () => {
         if (buyNumber === 1) return;
         setBuyNumber(prev => prev - 1);
     }
+
 
 
     return (

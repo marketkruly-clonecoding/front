@@ -3,12 +3,14 @@ import AddressWindow from '@components/MyPage/AddressWindow';
 import MyInfo from '@components/MyPage/MyInfo';
 import MyNav from '@components/MyPage/MyNav';
 import SideBar from '@components/SideBar';
+import { cls } from '@libs/cls';
 import execDaumPostcode from '@libs/execDaumPostcode';
+import useMutate from '@libs/useMutate';
 import { RootState } from '@modules/index';
 import { time } from 'console';
 import { NextPage } from 'next';
 import Script from 'next/script';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import useSWR from 'swr';
 
@@ -20,6 +22,7 @@ export interface IAddressInfo {
     is_like: "Y" | "N";
     recevied_name: string;
     recevied_phone: string;
+    idx?: number;
 }
 
 export interface IGetAddressResult {
@@ -33,24 +36,53 @@ const MyDeliverPage: NextPage = () => {
 
     const [addAddressInfo, setAddAddressInfo] = useState("");
     const [fixAddressInfo, setFixAddressInfo] = useState<IAddressInfo | null>(null);
+    const [likeClickInfo, setLikeClickInfo] = useState<IAddressInfo | null>();
     const { user } = useSelector((state: RootState) => state.user);
     const { data, mutate } = useSWR<IGetAddressResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Address`);
-    console.log(data);
+    const [likemutate] = useMutate(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Address/${likeClickInfo?.address_idx}/like`, true);
 
 
     const onAddAddressClick = () => {
         execDaumPostcode(setAddAddressInfo);
     }
 
-    const onFixAddressClick = (e: React.MouseEvent) => {
+    const onFixAddressOrLikeClick = (e: React.MouseEvent) => {
         const fixBtn = (e.target as Element).closest("[data-id]") as HTMLElement;
+        const likeBtn = (e.target as Element).closest("[data-like]") as HTMLElement;
         if (fixBtn) {
             const { dataset: { id } } = fixBtn;
             if (!data?.result || !id) return;
-            setFixAddressInfo(data.result[+id]);
+            setFixAddressInfo({ ...data.result[+id], idx: +id });
+        }
+        if (likeBtn) {
+            const { dataset: { like } } = likeBtn;
+            if (!data?.result || !like) return;
+            setLikeClickInfo({ ...data.result[+like], idx: +like });
         }
 
     }
+
+
+
+    useEffect(() => {
+        if (!data) return;
+        likemutate("");
+
+        let originArr = [...data.result];
+
+        originArr = originArr.map((item, idx) => {
+            if (item.is_like === "Y") {
+                return { ...item, is_like: "N" }
+            } else if (+idx === likeClickInfo?.idx) {
+                return { ...item, is_like: "Y" }
+            } else {
+                return item;
+            }
+        })
+
+
+        mutate(prev => ({ ...prev!, result: originArr }), true);
+    }, [likeClickInfo])
 
     return (
         <div>
@@ -75,7 +107,7 @@ const MyDeliverPage: NextPage = () => {
                             <div>새 배송지 추가</div>
                         </button>
                     </header>
-                    <ul onClick={onFixAddressClick} className="">
+                    <ul onClick={onFixAddressOrLikeClick} className="">
                         <li className="grid grid-cols-[1fr_5fr_1.5fr_1.5fr_1.5fr_1fr] py-5 justify-items-center border-b-[1px] border-black">
                             <span>선택</span>
                             <span>주소</span>
@@ -84,10 +116,10 @@ const MyDeliverPage: NextPage = () => {
                             <span>배송유형</span>
                             <span>수정</span>
                         </li>
-                        {data?.result.map((item, index) =>
+                        {data?.result?.map((item, index) =>
                             <li key={index} className="cursor-pointer border-b-[1px] grid grid-cols-[1fr_5fr_1.5fr_1.5fr_1.5fr_1fr] py-5 justify-items-center items-center">
-                                <button >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                <button data-like={index} >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className={cls(item.is_like === "Y" ? "text-purple-800" : "", "h-6 w-6")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </button>

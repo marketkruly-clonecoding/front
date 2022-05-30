@@ -19,6 +19,7 @@ const CategoryDetail = ({ result }: any) => {
         return <div>로딩중</div>
     }
 
+    console.log(result);
 
     return (
         <div className="p-28 pt-6">

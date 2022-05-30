@@ -1,34 +1,44 @@
 
 import CartItem from '@components/Cart/CartItem';
+import DeliverSetting from '@components/Cart/DeliverSetting';
 import { cls } from '@libs/cls';
 import { AddressInCartInfo, ICartItem } from '@libs/types';
+import useMutate from '@libs/useMutate';
 import { RootState } from '@modules/index';
+import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import useSWR from 'swr';
 
 
-interface ICartInfoResult {
+export interface ICartInfoResult {
     code: number;
     isSuccess: boolean;
     message: string;
     result: [CartItem: ICartItem[], Addres: AddressInCartInfo[]]
 }
 
-interface IDataKinds {
-    freezer: ICartItem[], // 냉동
-    fridge: ICartItem[] // 냉장        
+
+interface IAmount {
+    is_type: 0 | 1;
+    product_detail_idx: number;
+    product_idx: number;
 }
 
 const Cart = () => {
 
     const { user } = useSelector((state: RootState) => state.user);
     const { data, mutate } = useSWR<ICartInfoResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Cart`);
+    const [amount, setAmount] = useState<IAmount | null>(null);
+    const [fixAmount, { loading }] = useMutate(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Cart/${amount?.product_idx}/count`, true);
+
+    const router = useRouter();
 
     const [checkIdxArr, setCheckIdxArr] = useState<number[]>([]);
     const [kindBtns, setKindBtns] = useState({ freezer: true, fridge: true });
+    const [addressFixBtn, setAddressFixBtn] = useState(false);
 
-    console.log(data);
+
 
     const getFindLikeAddress = () => {
         const likeAddress = data?.result[1].find(item => item.is_like === "Y");
@@ -54,6 +64,9 @@ const Cart = () => {
     }
 
 
+    const onAddressClick = () => {
+        setAddressFixBtn(true);
+    }
 
     const onArrowToggleClick = (key: "freezer" | "fridge") => () => {
 
@@ -98,7 +111,11 @@ const Cart = () => {
             const newCheckArr = { ...data.result[0][+plus], product_amount: data.result[0][+plus].product_amount + 1 };
             newResult[+plus] = newCheckArr;
             mutate(prev => ({ ...prev!, result: [[...newResult], [...prev!.result[1]]] }), false);
-
+            setAmount({
+                is_type: 1,
+                product_detail_idx: data.result[0][+plus].idx !== 0 ? data.result[0][+plus].idx : 0,
+                product_idx: data.result[0][+plus].product_idx
+            });
         }
         if (minusBtn) {
             const { dataset: { minus } } = minusBtn;
@@ -108,11 +125,25 @@ const Cart = () => {
             const newCheckArr = { ...data.result[0][+minus], product_amount: data.result[0][+minus].product_amount - 1 };
             newResult[+minus] = newCheckArr;
             mutate(prev => ({ ...prev!, result: [newResult, prev!.result[1]] }), false);
+            setAmount({
+                is_type: 0,
+                product_detail_idx: data.result[0][+minus].idx !== 0 ? data.result[0][+minus].idx : 0,
+                product_idx: data.result[0][+minus].product_idx
+            });
         }
     }
 
 
+    const onBuyClick = () => {
+        localStorage.setItem("weKurly_buyIndx", JSON.stringify(checkIdxArr));
+        router.push("/order");
 
+    }
+
+    useEffect(() => {
+        if (!amount || loading) return;
+        fixAmount({ product_detail_idx: amount.product_detail_idx, is_type: amount.is_type });
+    }, [amount]);
 
 
     return (
@@ -214,7 +245,7 @@ const Cart = () => {
                             {getFindLikeAddress()}
                             <div className="mt-2 text-sm text-purple-800">샛별배송</div>
                         </div>
-                        <button className="border-[1px] rounded-sm text-sm mt-2 py-1 border-purple-800 text-purple-800 w-full">배송지 변경</button>
+                        <button onClick={onAddressClick} className="border-[1px] rounded-sm text-sm mt-2 py-1 border-purple-800 text-purple-800 w-full">배송지 변경</button>
                     </div>
                     <div className="p-5 bg-gray-100 text-lg">
                         <div className="flex justify-between py-2"><span>상품금액</span><span>{getAllPrice().originPrice}원</span></div>
@@ -222,9 +253,14 @@ const Cart = () => {
                         <div className="flex justify-between py-2"><span>배송비</span><span>0원</span></div>
                         <div className="flex justify-between border-t-2 py-5"><span>결제예정금액</span><span>{getAllPrice().discountPrice}원</span></div>
                     </div>
-                    <button className="bg-gray-300 mt-5 w-full p-5 rounded-md text-white">
-                        상품을 선택해주세요
-                    </button>
+                    {checkIdxArr.length ?
+                        <button onClick={onBuyClick} className="bg-purple-800 mt-5 w-full p-5 rounded-md text-white">
+                            주문하기
+                        </button>
+                        :
+                        <button className="bg-gray-300 mt-5 w-full p-5 rounded-md text-white">
+                            상품을 선택해주세요
+                        </button>}
                     <ul className="pl-5 w-full  text-xs text-gray-600 mt-5 space-y-2 list-disc">
                         <li>쿠폰/적립금은 주문서에서 사용 가능합니다</li>
                         <li>[배송중비중] 이전까지 주문 취소 가능합니다.</li>
@@ -233,6 +269,7 @@ const Cart = () => {
                 </div>
 
             </div>
+            {addressFixBtn ? <DeliverSetting likeAddressMutate={mutate} setAddressFixBtn={setAddressFixBtn} /> : null}
         </div>
     )
 
