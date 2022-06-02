@@ -1,25 +1,45 @@
+import SemiOrderInfo from '@components/order/SemiOrderInfo';
 import { RootState } from '@modules/index';
 import { NextPage } from 'next';
 import Script from 'next/script';
+import { userInfo } from 'os';
 import { useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import useSWR from 'swr';
 import { ICartInfoResult } from './cart';
 
+export interface IUserInfoResult {
+    code: number;
+    isSuccess: boolean;
+    message: string;
+    result: { name: string; phone: string; email: string; }
+}
+
+
 const Order: NextPage = () => {
 
     const { user } = useSelector((state: RootState) => state.user);
     const { data, mutate } = useSWR<ICartInfoResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Cart`);
-    console.log(data);
+
+    const { data: userData } = useSWR<IUserInfoResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/BeforePayment`);
+
 
     const checkIdxArr = useRef<number[]>(localStorage.getItem("weKurly_buyIndx") ?
         JSON.parse(localStorage.getItem("weKurly_buyIndx")!) : null);
 
     const [productsArrow, setProductsArrow] = useState(false);
 
+    const [orderInfoWindow, setOrderInfoWindow] = useState(false);
+
+
     const onArrowToggleClick = () => {
         setProductsArrow(prev => !prev);
     }
+
+    const onOrderInfoClick = () => {
+        setOrderInfoWindow(true);
+    }
+
     const getAllPrice = () => {
 
         let originPrice = 0;
@@ -59,8 +79,8 @@ const Order: NextPage = () => {
                     {
                         productsArrow ?
                             <ul>
-                                {checkIdxArr.current.map((item: number) =>
-                                    <li className="grid grid-cols-[1fr_8fr_1fr_1.5fr] py-7 items-center border-b-[1px]">
+                                {checkIdxArr.current.map((item: number, index) =>
+                                    <li key={index} className="grid grid-cols-[1fr_8fr_1fr_1.5fr] py-7 items-center border-b-[1px]">
                                         <img src={data?.result[0][item].url} className="w-[60px] h-[75px]" />
                                         <div className="font-semibold space-y-2">
                                             <h3>{data?.result[0][item].name}</h3>
@@ -100,9 +120,11 @@ const Order: NextPage = () => {
                 <div>
                     <h2 className="border-b-[1px] border-black  py-5 text-lg font-semibold">주문자 정보</h2>
                     <ul className="mt-4">
-                        <li className="py-3 text-sm font-medium grid grid-cols-[2.5fr_10fr]"><div>보내는 분</div> <div>김명원</div></li>
-                        <li className="py-3 text-sm font-medium grid grid-cols-[2.5fr_10fr]"><div>휴대폰</div><div>01041290790</div></li>
-                        <li className="py-3 text-sm font-medium grid grid-cols-[2.5fr_10fr]"><div>이메일</div><div>auddnjs2008@naver.com</div></li>
+                        <li className="py-3 text-sm font-medium grid grid-cols-[2.5fr_10fr]"><div>보내는 분</div> <div>{userData?.result.name}</div></li>
+                        <li className="py-3 text-sm font-medium grid grid-cols-[2.5fr_10fr]"><div>휴대폰</div>
+                            <div>{userData?.result.phone.substring(0, 3)}-{userData?.result.phone.substring(3, 7)}-{userData?.result.phone.substring(7)}</div>
+                        </li>
+                        <li className="py-3 text-sm font-medium grid grid-cols-[2.5fr_10fr]"><div>이메일</div><div>{userData?.result.email}</div></li>
                     </ul>
                 </div>
                 <div>
@@ -124,7 +146,7 @@ const Order: NextPage = () => {
                             <div>상세 정보</div>
                             <div className="space-y-2">
                                 <div className="w-48 h-11 border-2"></div>
-                                <div className="border-2  text-xs w-20 py-1 text-center">정보 등록</div>
+                                <div onClick={onOrderInfoClick} className="border-2 cursor-pointer text-xs w-20 py-1 text-center">정보 등록</div>
                             </div>
                         </li>
                     </ul>
@@ -180,6 +202,7 @@ const Order: NextPage = () => {
                     <li className="flex justify-between border-t-2 py-5"><span>최종결제금액</span><span className="text-xl font-semibold">{getAllPrice().discountPrice}원</span></li>
                 </ul>
             </div>
+            {orderInfoWindow ? <SemiOrderInfo setOrderInfoWindow={setOrderInfoWindow} /> : null}
         </div>
     )
 }

@@ -4,6 +4,7 @@ import { cls } from '@libs/cls';
 import execDaumPostcode from '@libs/execDaumPostcode';
 import useMutate from '@libs/useMutate';
 import { RootState } from '@modules/index';
+
 import { ICartInfoResult } from 'pages/cart';
 import { IAddressInfo, IGetAddressResult } from 'pages/mypage/deliver';
 import { useEffect, useState } from 'react';
@@ -103,7 +104,7 @@ const DeliverSetting = ({ setAddressFixBtn, likeAddressMutate }: IDeliverSetting
                                     <div>수정</div>
                                 </li>
                                 {data?.result.map((item, index) =>
-                                    <li className="grid grid-cols-[1.5fr_8fr_1.5fr] justify-items-center py-5 border-b-[1px]">
+                                    <li key={index} className="grid grid-cols-[1.5fr_8fr_1.5fr] justify-items-center py-5 border-b-[1px]">
                                         <button data-like={index} className={cls(item.is_like === "Y" ? "bg-purple-800" : "", "mr-2 border-2 rounded-full h-8 w-8 p-1")}>
                                             <svg xmlns="http://www.w3.org/2000/svg" className={cls(item.is_like === "Y" ? "text-white" : "", "h-5 w-5")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -132,6 +133,7 @@ const DeliverSetting = ({ setAddressFixBtn, likeAddressMutate }: IDeliverSetting
                     </div>
                     <button onClick={onAddAddressClick} className="border-t-[1px] w-full  p-5">+ 새 배송지 추가</button>
                 </div>
+
 
     )
 }

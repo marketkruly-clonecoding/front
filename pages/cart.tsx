@@ -6,6 +6,7 @@ import { AddressInCartInfo, ICartItem } from '@libs/types';
 import useMutate from '@libs/useMutate';
 import { RootState } from '@modules/index';
 import { useRouter } from 'next/router';
+import Script from 'next/script';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import useSWR from 'swr';
@@ -19,6 +20,8 @@ export interface ICartInfoResult {
 }
 
 
+
+
 interface IAmount {
     is_type: 0 | 1;
     product_detail_idx: number;
@@ -29,8 +32,11 @@ const Cart = () => {
 
     const { user } = useSelector((state: RootState) => state.user);
     const { data, mutate } = useSWR<ICartInfoResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Cart`);
+
+
     const [amount, setAmount] = useState<IAmount | null>(null);
     const [fixAmount, { loading }] = useMutate(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Cart/${amount?.product_idx}/count`, true);
+
 
     const router = useRouter();
 
@@ -73,7 +79,7 @@ const Cart = () => {
         setKindBtns(prev => ({ ...prev, [key]: !prev[key] }));
     }
 
-    const isAllInCheckArr = () => checkIdxArr.length === data?.result[0].length;
+    const isAllInCheckArr = () => data?.result.length && checkIdxArr.length === data?.result[0].length;
 
     const onAllCheckClick = () => {
         if (!data) return;
@@ -148,6 +154,10 @@ const Cart = () => {
 
     return (
         <div className="px-28 pt-10">
+            <Script
+                src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
+                strategy="beforeInteractive"
+            ></Script>
             <h1 className="text-3xl text-center">장바구니</h1>
             <div className="grid grid-cols-[7fr_3fr]">
                 <div>

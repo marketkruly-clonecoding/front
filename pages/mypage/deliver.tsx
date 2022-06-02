@@ -69,6 +69,7 @@ const MyDeliverPage: NextPage = () => {
         likemutate("");
 
         let originArr = [...data.result];
+        console.log("원래", originArr);
 
         originArr = originArr.map((item, idx) => {
             if (item.is_like === "Y") {
@@ -80,8 +81,9 @@ const MyDeliverPage: NextPage = () => {
             }
         })
 
+        console.log("바뀌고", originArr);
 
-        mutate(prev => ({ ...prev!, result: originArr }), true);
+        mutate(prev => ({ ...prev!, result: originArr }), false);
     }, [likeClickInfo])
 
     return (
