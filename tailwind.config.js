@@ -14,7 +14,8 @@ module.exports = {
       gridTemplateRows: {
         layout: `100px,
                  100px,
-                 10fr
+                 1fr,
+                 
                 `,
       },
     },

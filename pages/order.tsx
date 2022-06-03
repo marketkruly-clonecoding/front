@@ -3,7 +3,7 @@ import { RootState } from '@modules/index';
 import { NextPage } from 'next';
 import Script from 'next/script';
 import { userInfo } from 'os';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import useSWR from 'swr';
 import { ICartInfoResult } from './cart';
@@ -15,6 +15,15 @@ export interface IUserInfoResult {
     result: { name: string; phone: string; email: string; }
 }
 
+export interface IOrderInfo {
+    name: string;
+    phone: string;
+    where: string;
+    where_message: string;
+    frontDoor?: string;
+    frontDoor_message: string;
+    message: string;
+}
 
 const Order: NextPage = () => {
 
@@ -31,6 +40,35 @@ const Order: NextPage = () => {
 
     const [orderInfoWindow, setOrderInfoWindow] = useState(false);
 
+    const [orderInfo, setOrderInfo] = useState<IOrderInfo | null>(null);
+
+    const [costInfo, setCostInfo] = useState<{ originPrice: number; discountAmount: number; discountPrice: number; } | null>(null)
+
+
+
+    const getPayItems = () => {
+        if (!data) return;
+        const products = data.result[0];
+        const items = checkIdxArr.current.map(number => (
+            {
+                product_idx: products[number].product_idx, idx: products[number].idx, price: products[number].price,
+                discount: products[number].discount_price, amount: products[number].product_amount
+            }));
+        return items;
+    }
+
+
+    const onPayBtnClick = () => {
+        getPayItems();// orderList
+        //product_price: 총가격  deliver_fee:0 , product_discount: 할인가  coupon_discount: 0  use_point:0
+        // payment_fee:  결제금액   earn_point: 0 , 
+
+        // order:주문자, sender: 보내는 사람 ,recevied_name:받는 분, recipient_phone:연락처
+        //deliver_method: 배송방법, address:주소, pickup_location:문앞, entrance_method:공동현관
+        //packaging_method:"종이포장재",  notify_time: "배송직후"   non_release:결제수단으로환불
+
+
+    }
 
     const onArrowToggleClick = () => {
         setProductsArrow(prev => !prev);
@@ -39,6 +77,23 @@ const Order: NextPage = () => {
     const onOrderInfoClick = () => {
         setOrderInfoWindow(true);
     }
+
+    const getOrderInfo = () => {
+        if (!orderInfo) return "";
+        let result = "";
+        if (orderInfo.frontDoor) {
+            if (orderInfo.frontDoor_message) {
+                result = `${orderInfo.frontDoor}(${orderInfo.frontDoor_message})`;
+            } else {
+                result = `${orderInfo.frontDoor}`;
+            }
+        } else {
+            result = `${orderInfo.where_message}`;
+        }
+        return result;
+    }
+
+
 
     const getAllPrice = () => {
 
@@ -56,9 +111,12 @@ const Order: NextPage = () => {
         return { originPrice, discountAmount: originPrice - discountPrice, discountPrice }
     }
 
+    useEffect(() => {
+        setCostInfo(getAllPrice());
+    }, [])
 
     return (
-        <div className="px-28 py-12  grid grid-areas-layout grid-cols-layout gird-rows-layout">
+        <div className="px-28 py-12 relative  grid grid-areas-layout grid-cols-layout gird-rows-layout">
             <Script src="https://js.tosspayments.com/v1" strategy='afterInteractive' />
             <h1 className="grid-in-header text-center text-3xl font-medium">주문서</h1>
             <div className="grid-in-content h-full  space-y-16">
@@ -145,7 +203,20 @@ const Order: NextPage = () => {
                         <li className="py-3 text-sm font-medium grid grid-cols-[2.5fr_10fr]">
                             <div>상세 정보</div>
                             <div className="space-y-2">
-                                <div className="w-48 h-11 border-2"></div>
+                                {orderInfo ?
+                                    <div className="w-48 h-11  space-y-1">
+                                        <div className="space-x-2 flex itesm-center">
+                                            <span>{orderInfo.where}</span>
+                                            <span>|</span>
+                                            <span>{getOrderInfo()}</span>
+                                        </div>
+                                        <div className="space-x-2">
+                                            <span>배송완료 메시지</span>
+                                            <span>|</span>
+                                            <span>{orderInfo.message}</span>
+                                        </div>
+                                    </div>
+                                    : null}
                                 <div onClick={onOrderInfoClick} className="border-2 cursor-pointer text-xs w-20 py-1 text-center">정보 등록</div>
                             </div>
                         </li>
@@ -192,17 +263,18 @@ const Order: NextPage = () => {
                 <h1 className="text-lg font-semibold py-4">결제금액</h1>
                 <ul className="bg-gray-100 border-[1px] p-5 space-y-5">
                     <li className="space-y-2" >
-                        <div className="flex justify-between"><span>주문금액</span><span> {getAllPrice().discountPrice}원</span></div>
-                        <div className="flex justify-between text-sm text-gray-500"><span>ㄴ 상품금액</span><span>{getAllPrice().originPrice}원</span></div>
-                        <div className="flex justify-between text-sm text-gray-500"><span>ㄴ 상품할인금액</span><span>{getAllPrice().discountAmount}원</span></div>
+                        <div className="flex justify-between"><span>주문금액</span><span> {costInfo?.discountPrice}원</span></div>
+                        <div className="flex justify-between text-sm text-gray-500"><span>ㄴ 상품금액</span><span>{costInfo?.originPrice}원</span></div>
+                        <div className="flex justify-between text-sm text-gray-500"><span>ㄴ 상품할인금액</span><span>{costInfo?.discountAmount}원</span></div>
                     </li>
                     <li className="flex justify-between"><span>배송비</span><span>0원</span></li>
                     <li className="flex justify-between"><span>쿠폰할인금액</span><span>0원</span></li>
                     <li className="flex justify-between"><span>적립금 사용</span><span>0원</span></li>
-                    <li className="flex justify-between border-t-2 py-5"><span>최종결제금액</span><span className="text-xl font-semibold">{getAllPrice().discountPrice}원</span></li>
+                    <li className="flex justify-between border-t-2 py-5"><span>최종결제금액</span><span className="text-xl font-semibold">{costInfo?.discountPrice}원</span></li>
                 </ul>
             </div>
-            {orderInfoWindow ? <SemiOrderInfo setOrderInfoWindow={setOrderInfoWindow} /> : null}
+            <button onClick={onPayBtnClick} className=" mt-28 absolute -bottom-[300px] left-1/2 -translate-x-1/2 bg-purple-800 text-white p-5 w-1/3">{costInfo?.discountPrice}원 결제하기</button>
+            {orderInfoWindow ? <SemiOrderInfo userInfo={userData ? userData.result : null} orderInfo={orderInfo} setOrderInfoWindow={setOrderInfoWindow} setOrderInfo={setOrderInfo} /> : null}
         </div>
     )
 }

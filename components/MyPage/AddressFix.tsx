@@ -37,7 +37,8 @@ const AddressFix = ({ setFixAddressInfo, fixAddressInfo, addressMutate, addressL
         mutate(submitData);
         setFixAddressInfo(null);
         addressMutate();
-        if (addressListMutate) addressListMutate();
+        if (addressListMutate)
+            addressListMutate();
     }
 
     const onDefaultToggleClick = () => {

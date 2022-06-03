@@ -1,32 +1,79 @@
+import { IOrderInfo } from 'pages/order';
 import { Dispatch, SetStateAction, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
 
 interface ISemiOrderForm {
+    name: string;
+    phone: string;
     where: string;
+    where_message: string;
     frontDoor?: string;
+    frontDoor_message: string;
+    password?: string;
+    message: string;
 }
 
 interface ISemiOrderInfo {
     setOrderInfoWindow: Dispatch<SetStateAction<boolean>>
+    setOrderInfo: Dispatch<SetStateAction<IOrderInfo | null>>
+    orderInfo: ISemiOrderForm | null;
+    userInfo: { name: string; phone: string; email: string; } | null;
 }
 
-const SemiOrderInfo = ({ setOrderInfoWindow }: ISemiOrderInfo) => {
+const SemiOrderInfo = ({ setOrderInfoWindow, setOrderInfo, orderInfo, userInfo }: ISemiOrderInfo) => {
 
-    const { register, handleSubmit, watch } = useForm<ISemiOrderForm>();
+    const { register, handleSubmit, watch, setValue } = useForm<ISemiOrderForm>();
 
     const where = watch("where");
     const frontDoor = watch("frontDoor");
+    const message = watch("message");
+
+
+    const onValid = (data: ISemiOrderForm) => {
+        const newData = { ...data, frontDoor: data.where === "문앞" || data.where === "택배함" ? data.frontDoor : undefined }
+        setOrderInfo(newData);
+        setOrderInfoWindow(false);
+    }
+
+    const onOrderInfoSameClick = () => {
+        if (!userInfo) return;
+        setValue("name", userInfo.name);
+        setValue("phone", userInfo.phone);
+    }
 
     const onCloseClick = () => {
         setOrderInfoWindow(false);
     }
 
+    useEffect(() => {
+        console.log(orderInfo);
+        if (!orderInfo) {
+            setValue("where", "문앞");
+            setValue("frontDoor", "공동현관");
+        } else {
+            setValue("name", orderInfo.name);
+            setValue("phone", orderInfo.phone);
+            setValue("where", orderInfo.where);
+            if (orderInfo.password) setValue("password", orderInfo.password);
+            if (orderInfo.frontDoor) {
+
+                setValue("frontDoor", orderInfo.frontDoor);
+                if (orderInfo.frontDoor_message) {
+                    setValue("frontDoor_message", orderInfo.frontDoor_message);
+                }
+            } else {
+                setValue("where_message", orderInfo.where_message);
+            }
+        }
+    }, [])
+
+
     return (
         <div className="fixed overflow-auto p-8 w-[40vw] h-[100vh]  top-1/2 left-1/2  -translate-x-1/2 -translate-y-1/2  bg-white shadow-xl z-30">
             <header className="flex  justify-between items-center">
                 <h1 className="text-2xl font-semibold">배송정보</h1>
-                <button className="flex items-center">
+                <button onClick={onOrderInfoSameClick} className="flex items-center">
                     <div className="w-6 h-6 p-1  rounded-full mr-3 border-2 flex justify-center items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -36,37 +83,37 @@ const SemiOrderInfo = ({ setOrderInfoWindow }: ISemiOrderInfo) => {
                 </button>
             </header>
             <main className="mt-6">
-                <form className="space-y-5">
+                <form onSubmit={handleSubmit(onValid)} className="space-y-5">
                     <div className="space-y-2">
                         <h2 className="">받으실 분 <span className="text-red-500">*</span></h2>
-                        <input className="border-[1px]  rounded-sm p-2 border-gray-300 w-full" />
+                        <input {...register("name", { required: true })} className="border-[1px]  rounded-sm p-2 border-gray-300 w-full" />
                     </div>
                     <div className="space-y-2">
                         <h2>휴대폰 <span className="text-red-500">*</span></h2>
-                        <input className="border-[1px]  rounded-sm p-2 border-gray-300 w-full" />
+                        <input {...register("phone", { required: true })} className="border-[1px]  rounded-sm p-2 border-gray-300 w-full" />
                     </div>
 
                     <div>
                         <h2 className="mb-5">받으실 장소 <span className="text-red-500">*</span></h2>
                         <div className="flex flex-col">
                             <div className="flex items-center space-x-3 mb-5">
-                                <input {...register("where", { required: true })} defaultChecked className="w-6 h-6" type="radio" id="문앞" name="where" value="문앞">
+                                <input {...register("where", { required: true })} defaultChecked={!orderInfo || orderInfo?.where === "문앞"} className="w-6 h-6" type="radio" id="문앞" name="where" value="문앞">
                                 </input>
                                 <label htmlFor="문앞">문 앞</label>
                             </div>
 
                         </div>
                         <div className="flex items-center space-x-3 mb-5">
-                            <input {...register("where", { required: true })} className="w-6 h-6" type="radio" id="경비실" name="where" value="경비실"></input>
+                            <input {...register("where", { required: true })} defaultChecked={orderInfo?.where === "경비실"} className="w-6 h-6" type="radio" id="경비실" name="where" value="경비실"></input>
                             <label htmlFor="경비실">경비실</label>
                         </div>
                         <div className="flex items-center space-x-3 mb-5">
-                            <input {...register("where", { required: true })} className="w-6 h-6" type="radio" id="택배함" name="where" value="택배함"></input>
+                            <input {...register("where", { required: true })} defaultChecked={orderInfo?.where === "택배함"} className="w-6 h-6" type="radio" id="택배함" name="where" value="택배함"></input>
                             <label htmlFor="택배함">택배함</label>
 
                         </div>
                         <div className="flex items-center space-x-3 mb-5">
-                            <input {...register("where", { required: true })} className="w-6 h-6" type="radio" id="기타장소" name="where" value="기타장소"></input>
+                            <input {...register("where", { required: true })} defaultChecked={orderInfo?.where === "기타장소"} className="w-6 h-6" type="radio" id="기타장소" name="where" value="기타장소"></input>
                             <label htmlFor="기타장소">기타장소</label>
                         </div>
                         <div>
@@ -80,7 +127,7 @@ const SemiOrderInfo = ({ setOrderInfoWindow }: ISemiOrderInfo) => {
                                         </div>
                                         {
                                             frontDoor === "공동현관" ?
-                                                <input className="border-[1px]  rounded-sm p-2 border-gray-300 w-full" type="text" placeholder="예:#1234*" />
+                                                <input {...register("password")} className="border-[1px]  rounded-sm p-2 border-gray-300 w-full" type="text" placeholder="예:#1234*" />
                                                 : null
                                         }
                                     </div>
@@ -94,7 +141,7 @@ const SemiOrderInfo = ({ setOrderInfoWindow }: ISemiOrderInfo) => {
                                             <label htmlFor="기타">기타</label>
                                         </div>
                                         {frontDoor === "기타" ?
-                                            <textarea className="placeholder:text-sm  w-full   resize-none  border-2 p-3" placeholder='예: 연락처로 전화, 경비실 호출(배송 시간은 별도로 지정할 수 없습니다.'></textarea>
+                                            <textarea {...register("frontDoor_message")} className="placeholder:text-sm  w-full   resize-none  border-2 p-3" placeholder='예: 연락처로 전화, 경비실 호출(배송 시간은 별도로 지정할 수 없습니다.'></textarea>
                                             : null}
                                     </div>
                                 </div>
@@ -102,7 +149,7 @@ const SemiOrderInfo = ({ setOrderInfoWindow }: ISemiOrderInfo) => {
                             {where === "경비실" ?
                                 <div>
                                     <h3 className="mb-5 font-semibold ">경비실 특이사항</h3>
-                                    <textarea className="placeholder:text-sm  w-full resize-none  border-2 p-3" placeholder="경비실 위치 등 특이사항이 있을 경우 작성해주세요"></textarea>
+                                    <textarea {...register("where_message")} className="placeholder:text-sm  w-full resize-none  border-2 p-3" placeholder="경비실 위치 등 특이사항이 있을 경우 작성해주세요"></textarea>
                                 </div>
                                 : null}
                             {where === "택배함" ?
@@ -134,7 +181,7 @@ const SemiOrderInfo = ({ setOrderInfoWindow }: ISemiOrderInfo) => {
                                                 <label htmlFor="기타">기타</label>
                                             </div>
                                             {frontDoor === "기타" ?
-                                                <textarea className="placeholder:text-sm  w-full   resize-none  border-2 p-3" placeholder='예: 연락처로 전화, 경비실 호출(배송 시간은 별도로 지정할 수 없습니다.'></textarea>
+                                                <textarea {...register("where_message")} className="placeholder:text-sm  w-full   resize-none  border-2 p-3" placeholder='예: 연락처로 전화, 경비실 호출(배송 시간은 별도로 지정할 수 없습니다.'></textarea>
                                                 : null}
                                         </div>
                                     </div>
@@ -153,11 +200,11 @@ const SemiOrderInfo = ({ setOrderInfoWindow }: ISemiOrderInfo) => {
                         <h2>배송 완료 메시지 전송 <span className="text-red-500">*</span></h2>
                         <div className="flex w-full py-6">
                             <div className="w-1/2 flex items-center space-x-2">
-                                <input className="w-6 h-6" type="radio" id="배송직후" name="message" value="배송직후"></input>
+                                <input {...register("message", { required: true })} defaultChecked={orderInfo?.message === "배송직후"} className="w-6 h-6" type="radio" id="배송직후" name="message" value="배송직후"></input>
                                 <label htmlFor="배송직후">배송직후</label>
                             </div>
                             <div className="w-1/2 flex items-center space-x-2">
-                                <input className="w-6 h-6" type="radio" id="오전7시" name="message" value="오전7시"></input>
+                                <input {...register("message", { required: true })} defaultChecked={orderInfo?.message === "오전7시"} className="w-6 h-6" type="radio" id="오전7시" name="message" value="오전7시"></input>
                                 <label htmlFor="오전7시">오전7시</label>
                             </div>
                         </div>
