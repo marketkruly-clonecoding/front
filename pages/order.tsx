@@ -1,6 +1,8 @@
 import SemiOrderInfo from '@components/order/SemiOrderInfo';
+import useMutate from '@libs/useMutate';
 import { RootState } from '@modules/index';
 import { NextPage } from 'next';
+import { useRouter } from 'next/router';
 import Script from 'next/script';
 import { userInfo } from 'os';
 import { useEffect, useRef, useState } from 'react';
@@ -25,13 +27,23 @@ export interface IOrderInfo {
     message: string;
 }
 
+interface IPayResult {
+    isSuccess: boolean;
+    code: number;
+    message: string;
+    result: any
+}
+
 const Order: NextPage = () => {
+
+    const router = useRouter();
 
     const { user } = useSelector((state: RootState) => state.user);
     const { data, mutate } = useSWR<ICartInfoResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Cart`);
 
     const { data: userData } = useSWR<IUserInfoResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/BeforePayment`);
 
+    const [payMutate, { data: payResult, loading }] = useMutate<IPayResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/payment`);
 
     const checkIdxArr = useRef<number[]>(localStorage.getItem("weKurly_buyIndx") ?
         JSON.parse(localStorage.getItem("weKurly_buyIndx")!) : null);
@@ -59,13 +71,39 @@ const Order: NextPage = () => {
 
 
     const onPayBtnClick = () => {
-        getPayItems();// orderList
-        //product_price: 총가격  deliver_fee:0 , product_discount: 할인가  coupon_discount: 0  use_point:0
-        // payment_fee:  결제금액   earn_point: 0 , 
+        const orderList = { orderList: getPayItems() };
 
-        // order:주문자, sender: 보내는 사람 ,recevied_name:받는 분, recipient_phone:연락처
-        //deliver_method: 배송방법, address:주소, pickup_location:문앞, entrance_method:공동현관
-        //packaging_method:"종이포장재",  notify_time: "배송직후"   non_release:결제수단으로환불
+        if (!orderInfo) {
+            alert("배송 정보의 정보등록을 해주세요");
+            return;
+        }
+
+        const priceInfo = {
+            product_price: costInfo?.originPrice, delivery_fee: 0,
+            product_discount: costInfo?.discountPrice,
+            coupon_discount: 0, use_point: 0,
+            payment_fee: costInfo?.discountPrice, earn_point: 0,
+            pay_method: "카드",
+        }
+
+
+        const peopleInfo = {
+            orderer: userData?.result.name, sender: userData?.result.name,
+            recevied_name: orderInfo?.name,
+            recipient_phone: orderInfo?.phone,
+            deliver_method: "새벽배송",
+            address: data?.result[1][0].address_main + " " + data?.result[1][0].address_desc,
+            pickup_location: orderInfo?.where,
+            entrance_method: orderInfo?.frontDoor,
+            packaging_method: "종이포장재",
+            notify_time: orderInfo?.message,
+            non_release: "결제수단으로환불"
+        }
+
+        const sendData = { ...orderList, ...priceInfo, ...peopleInfo };
+
+        payMutate(sendData);
+
 
 
     }
@@ -114,6 +152,20 @@ const Order: NextPage = () => {
     useEffect(() => {
         setCostInfo(getAllPrice());
     }, [])
+
+    useEffect(() => {
+        if (!payResult) return;
+
+        if (payResult.isSuccess) {
+            alert("결제가 정상적으로 이루어졌습니다.");
+            router.push("/");
+
+        } else {
+            alert("결제에 오류가 발생하였습니다.");
+        }
+
+
+    }, [payResult])
 
     return (
         <div className="px-28 py-12 relative  grid grid-areas-layout grid-cols-layout gird-rows-layout">
@@ -167,7 +219,7 @@ const Order: NextPage = () => {
                             <ul>
                                 <li className="p-10 border-b-[1px] text-center">
                                     <div>
-                                        {`${data?.result[0][checkIdxArr.current[0]].name} 외 `}
+                                        {`${data?.result[0][checkIdxArr.current[0]].name} 외`}
                                         <span className="text-purple-800 font-semibold">{checkIdxArr.current.length - 1}개</span>
                                         상품을 주문합니다.
                                     </div>
