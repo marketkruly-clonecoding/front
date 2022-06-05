@@ -23,7 +23,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     if (router.asPath === "/signup") {
       setHeight("300vh")
     } else if (router.asPath === "/") {
-      setHeight("400vh")
+      setHeight("450vh")
     } else if (router.pathname === "/product/[id]") {
       setHeight("200vh");
     } else if (router.pathname === "/category/[id]") {

@@ -1,3 +1,4 @@
+import { cls } from '@libs/cls';
 import { Product, ProductList } from '@libs/types';
 import useMutate from '@libs/useMutate';
 import { addRecentviewList, openCartWindow } from '@modules/product';
@@ -8,10 +9,11 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 interface IImageItem {
-    data: [Info: Product, ListInfo: [] | ProductList[]]
+    data: [Info: Product, ListInfo: [] | ProductList[]];
+    isHome?: boolean;
 }
 
-const ImageItem = ({ data }: IImageItem) => {
+const ImageItem = ({ data, isHome = false }: IImageItem) => {
 
     const dispatch = useDispatch();
     const router = useRouter();
@@ -33,9 +35,9 @@ const ImageItem = ({ data }: IImageItem) => {
     }
 
 
-
-    return <li onClick={onClick} className="w-[340px]">
-        <div className="relative w-full h-[435px] bg-slate-500 mb-4">
+    //w-[340px] h-[435px]  // w-[250px] h-[318px]
+    return <li onClick={onClick} className={cls(isHome ? "pr-[18px] space-y-2" : "w-[340px]")}>
+        <div className={cls(isHome ? "relative w-[250px] h-[318px] bg-gray-400" : "relative w-full h-[435px] bg-slate-500 mb-4")}>
             <Image onClick={onImgClick} layout="fill" objectFit='cover' src={data[0].url} />
             <button onClick={onStoreClick} className="absolute z-20 right-3 bottom-3  flex justify-center items-center w-10 h-10  rounded-full bg-[rgba(136,115,142,0.8)]">
                 <svg xmlns="http://www.w3.org/2000/svg" className="text-white h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -46,7 +48,7 @@ const ImageItem = ({ data }: IImageItem) => {
         <Link href={`/product/${data[0].product_idx}`}>
             <a>
                 <div className="space-y-3">
-                    <h1 className="text-xl">{data[0].brand_name ? `[${data[0].brand_name}]` : null}{data[0].name}</h1>
+                    <h1 className={isHome ? "mt-3" : "text-xl"}>{data[0].brand_name ? `[${data[0].brand_name}]` : null}{data[0].name}</h1>
                     {data[0].discount ?
                         <div>
                             <div className="text-lg font-semibold">
@@ -58,7 +60,7 @@ const ImageItem = ({ data }: IImageItem) => {
                         :
                         <div className="text-lg font-semibold">{data[0].price}원</div>
                     }
-                    <p className="text-sm text-gray-400 font-semibold">{data[0].subname}</p>
+                    {isHome ? null : <p className="text-sm text-gray-400 font-semibold">{data[0].subname}</p>}
                     {
                         data[0].is_kurlyonly ?
                             <ul className="flex text-xs space-x-2">

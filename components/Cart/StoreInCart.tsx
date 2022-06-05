@@ -18,7 +18,7 @@ const StoreInCart = ({ info }: { info: [Info: Product, ListInfo: [] | ProductLis
     const [mutate, { loading }] = useMutate(`http://prod.hiimpedro.site:9000/app/products/${info[0].product_idx || ""}/addcart`);
     const { data, mutate: cartMutate } = useSWR<ICartInfoResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Cart`);
 
-    const [buyNumbers, setBuyNumbers] = useState(info[1].length > 1 ? info[1].map(item => 1) : [1]);
+    const [buyNumbers, setBuyNumbers] = useState(info[1].length > 1 ? info[1].map(item => 0) : [1]);
 
     const getAllCost = () => {
         let result = 0;
@@ -40,10 +40,10 @@ const StoreInCart = ({ info }: { info: [Info: Product, ListInfo: [] | ProductLis
 
     const onSubmit = () => {
         if (loading) return;
-        if (buyNumbers.length === 1) {
+        if (info[1].length === 0) {
             mutate({ addCartList: [{ product_detail_idx: 0, count: buyNumbers[0] }] });
-        } else if (buyNumbers.length > 1) {
-            mutate({ addCartList: info[1].map((list, index) => ({ product_detail_idx: list.index, count: buyNumbers[index] })) });
+        } else if (info[1].length > 1) {
+            mutate({ addCartList: info[1].filter((_, index) => buyNumbers[index] > 0).map((list, index) => ({ product_detail_idx: list.index, count: buyNumbers[index] })) });
         }
         dispatch(openCartAlarm(info[0]));
         dispatch(closeCartWindow());
@@ -91,7 +91,7 @@ const StoreInCart = ({ info }: { info: [Info: Product, ListInfo: [] | ProductLis
                 setBuyNumbers(prev => [prev[0] - 1]);
             } else if (key === "List") {
                 const { dataset: { minus } } = minusBtn;
-                if (!minus || buyNumbers[+minus] === 1) return;
+                if (!minus || buyNumbers[+minus] === 0) return;
                 setBuyNumbers(prev => {
                     const newArr = [...prev];
                     newArr[+minus] -= 1;
@@ -184,7 +184,7 @@ const StoreInCart = ({ info }: { info: [Info: Product, ListInfo: [] | ProductLis
                             </div>
                         </div>
                 }
-                <div className="flex w-full space-x-1">
+                <div className="flex w-full space-x-1 mt-3">
                     <button onClick={onCloseClick} className="w-1/2 border-[1px] rounded-sm py-5">취소</button>
                     <button onClick={onSubmit} className="w-1/2 bg-purple-800 text-white rounded-sm py-4">장바구니 담기</button>
                 </div>

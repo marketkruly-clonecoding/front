@@ -4,7 +4,6 @@ import { RootState } from '@modules/index';
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
-import { userInfo } from 'os';
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import useSWR from 'swr';
@@ -45,8 +44,7 @@ const Order: NextPage = () => {
 
     const [payMutate, { data: payResult, loading }] = useMutate<IPayResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/payment`);
 
-    const checkIdxArr = useRef<number[]>(localStorage.getItem("weKurly_buyIndx") ?
-        JSON.parse(localStorage.getItem("weKurly_buyIndx")!) : null);
+    const checkIdxArr = useRef<number[] | null>(typeof window === "undefined" ? null : JSON.parse(localStorage.getItem("weKurly_buyIndx") as string));
 
     const [productsArrow, setProductsArrow] = useState(false);
 
@@ -59,7 +57,7 @@ const Order: NextPage = () => {
 
 
     const getPayItems = () => {
-        if (!data) return;
+        if (!data || !checkIdxArr?.current) return;
         const products = data.result[0];
         const items = checkIdxArr.current.map(number => (
             {
@@ -134,7 +132,7 @@ const Order: NextPage = () => {
 
 
     const getAllPrice = () => {
-
+        if (!checkIdxArr.current) return null;
         let originPrice = 0;
         let discountPrice = 0;
         if (checkIdxArr.current.length && data?.result[0].length) {
@@ -150,7 +148,9 @@ const Order: NextPage = () => {
     }
 
     useEffect(() => {
+        if (!localStorage.getItem("weKurly_buyIndx")) router.push("/cart");
         setCostInfo(getAllPrice());
+
     }, [])
 
     useEffect(() => {
@@ -189,7 +189,7 @@ const Order: NextPage = () => {
                     {
                         productsArrow ?
                             <ul>
-                                {checkIdxArr.current.map((item: number, index) =>
+                                {checkIdxArr?.current?.map((item: number, index) =>
                                     <li key={index} className="grid grid-cols-[1fr_8fr_1fr_1.5fr] py-7 items-center border-b-[1px]">
                                         <img src={data?.result[0][item].url} className="w-[60px] h-[75px]" />
                                         <div className="font-semibold space-y-2">
@@ -219,8 +219,8 @@ const Order: NextPage = () => {
                             <ul>
                                 <li className="p-10 border-b-[1px] text-center">
                                     <div>
-                                        {`${data?.result[0][checkIdxArr.current[0]].name} 외`}
-                                        <span className="text-purple-800 font-semibold">{checkIdxArr.current.length - 1}개</span>
+                                        {checkIdxArr.current && `${data?.result[0][checkIdxArr.current[0]].name} 외`}
+                                        <span className="text-purple-800 font-semibold">{checkIdxArr.current && checkIdxArr.current.length - 1}개</span>
                                         상품을 주문합니다.
                                     </div>
                                 </li>
@@ -331,5 +331,5 @@ const Order: NextPage = () => {
     )
 }
 
-// grid grid-cols-[3fr_1.2fr] gap-5 
+
 export default Order;

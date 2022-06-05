@@ -10,6 +10,7 @@ export interface Product {
   sales_count: number;
   url: string;
   maxminum_purchase: string;
+  updated_at?: string;
 }
 
 export interface ProductDetail {
