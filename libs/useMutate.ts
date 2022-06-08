@@ -29,6 +29,7 @@ const useMutate = <T = any>(
         "Content-Type": "application/json",
         "x-access-token": cookies.get("weKurly_access_token"),
       },
+      // credentials: "include",
       body: JSON.stringify(data),
     })
       .then((response) => response.json().catch(() => {}))

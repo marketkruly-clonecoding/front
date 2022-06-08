@@ -1,6 +1,7 @@
 import StoreInCart from '@components/Cart/StoreInCart';
 import { Product, ProductList } from '@libs/types';
 import { ISearch } from 'pages/[id]';
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import ImageItem from './ImageItem';
 
@@ -13,24 +14,29 @@ interface IImagesBox {
 
 const ImagesBox = ({ productsInfo }: any) => {
 
+    const [data, setData] = useState(productsInfo[1]);
+    const [separateKey, setSeparateKey] = useState("");
 
+    const onSeparateKeyClick = () => {
+
+    }
 
     return (
         <div>
             <header className="py-4 flex justify-between text-xs">
                 <div>{productsInfo && productsInfo[0]}개</div>
-                <ul className="flex space-x-2 text-gray-400">
-                    <li>추천순</li>
+                <ul onClick={onSeparateKeyClick} className="flex space-x-2 text-gray-400">
+                    <li data-key="추천순">추천순</li>
                     <span> | </span>
-                    <li>신상품순</li>
+                    <li data-key="신상품순">신상품순</li>
                     <span> | </span>
-                    <li>판매량순</li>
+                    <li data-key="판매량순">판매량순</li>
                     <span> | </span>
-                    <li>혜택순</li>
+                    <li data-key="혜택순">혜택순</li>
                     <span> | </span>
-                    <li>낮은가격순</li>
+                    <li data-key="낮은가격순">낮은가격순</li>
                     <span> | </span>
-                    <li>높은가격순</li>
+                    <li data-key="높은가격순">높은가격순</li>
                 </ul>
             </header>
             <main className=" ">

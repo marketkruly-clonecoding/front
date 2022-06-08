@@ -18,7 +18,7 @@ interface ILoginForm {
 const Login = () => {
 
 
-    const [mutate, { data, error, loading }] = useMutate("http://prod.hiimpedro.site:9000/app/users/logIn");
+    const [mutate, { data, error, loading }] = useMutate("http://prod.hiimpedro.site:9000/app/users/logIn_new");
     const { register, handleSubmit } = useForm<ILoginForm>();
     const router = useRouter();
     const dispatch = useDispatch();
@@ -34,11 +34,11 @@ const Login = () => {
 
     useEffect(() => {
         if (data?.code === 1000) {
-            const { result: { userIdx, name, jwt } } = data;
-            console.log(jwt);
+            const [info, status] = data.result;
+            const { userIdx, name, accessToken } = info;
             localStorage.setItem("weKurlyuser", JSON.stringify({ userIdx, name }));
             dispatch(login({ userIdx, name }));
-            cookies.set("weKurly_access_token", jwt, { sameSite: 'lax' });
+            cookies.set("weKurly_access_token", accessToken, { sameSite: 'lax' });
             router.push("/");
         }
     }, [data])
