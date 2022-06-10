@@ -135,7 +135,7 @@ const ProductDetail: NextPage = () => {
 
 
     const onBuyPlusClick = () => {
-        if (+data.result[0][0].maxminum_purchase <= buyNumber) {
+        if (data.result[0][0].maxminum_purchase && +data.result[0][0].maxminum_purchase <= buyNumber) {
             alert(`최대수량은 ${data.result[0][0].maxminum_purchase}개 입니다.`);
             return;
         }

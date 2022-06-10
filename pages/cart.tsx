@@ -28,6 +28,29 @@ interface IAmount {
     product_idx: number;
 }
 
+// 냉동 냉장 상온 
+
+interface SeparateData {
+    [key: string]: ICartItem[];
+    freezer: ICartItem[];
+    fridge: ICartItem[];
+    normal: ICartItem[];
+}
+interface Separate {
+    [key: string]: string;
+    냉동: string;
+    냉장: string;
+    상온: string;
+}
+
+const SeparateType: Separate = {
+    "냉동": "freezer",
+    "냉장": "fridge",
+    "상온": "normal"
+}
+
+
+
 const Cart = () => {
 
     const { user } = useSelector((state: RootState) => state.user);
@@ -36,14 +59,13 @@ const Cart = () => {
 
     const [amount, setAmount] = useState<IAmount | null>(null);
     const [fixAmount, { loading }] = useMutate(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Cart/${amount?.product_idx}/count`, true);
-
+    const [kindData, setKindData] = useState<SeparateData>({ freezer: [], fridge: [], normal: [] });
 
     const router = useRouter();
 
-    const [checkIdxArr, setCheckIdxArr] = useState<number[]>([]);
-    const [kindBtns, setKindBtns] = useState({ freezer: true, fridge: true });
+    const [checkIdxArr, setCheckIdxArr] = useState<string[]>([]);
+    const [kindBtns, setKindBtns] = useState({ freezer: true, fridge: true, normal: true });
     const [addressFixBtn, setAddressFixBtn] = useState(false);
-
 
 
     const getFindLikeAddress = () => {
@@ -57,15 +79,35 @@ const Cart = () => {
 
         let originPrice = 0;
         let discountPrice = 0;
-        if (data?.result[0].length) {
-            const { result } = data;
-            for (let i = 0; i < result[0].length; i++) {
-                if (!checkIdxArr.includes(i)) continue;
-                originPrice += (+result[0][i].price * result[0][i].product_amount);
-                discountPrice = discountPrice + (+result[0][i].discount_price ? +result[0][i].discount_price : +result[0][i].price) * result[0][i].product_amount;
+        const { freezer, fridge, normal } = kindData;
+
+        if (freezer.length) {
+            for (let i = 0; i < freezer.length; i++) {
+                if (!checkIdxArr.includes(SeparateType[freezer[i].type] + "-" + i)) continue;
+
+                originPrice += (+freezer[i].price * freezer[i].product_amount);
+                discountPrice = discountPrice + (+freezer[i].discount_price ? +freezer[i].discount_price : +freezer[i].price) * freezer[i].product_amount;
+            }
+        }
+
+        if (fridge.length) {
+            for (let i = 0; i < fridge.length; i++) {
+                if (!checkIdxArr.includes(SeparateType[fridge[i].type] + "-" + i)) continue;
+
+                originPrice += (+fridge[i].price * fridge[i].product_amount);
+                discountPrice = discountPrice + (+fridge[i].discount_price ? +fridge[i].discount_price : +fridge[i].price) * fridge[i].product_amount;
             }
 
         }
+        if (normal.length) {
+            for (let i = 0; i < normal.length; i++) {
+                if (!checkIdxArr.includes(SeparateType[normal[i].type] + "-" + i)) continue;
+
+                originPrice += (+normal[i].price * normal[i].product_amount);
+                discountPrice = discountPrice + (+normal[i].discount_price ? +normal[i].discount_price : +normal[i].price) * normal[i].product_amount;
+            }
+        }
+
         return { originPrice, discountAmount: originPrice - discountPrice, discountPrice }
     }
 
@@ -74,7 +116,7 @@ const Cart = () => {
         setAddressFixBtn(true);
     }
 
-    const onArrowToggleClick = (key: "freezer" | "fridge") => () => {
+    const onArrowToggleClick = (key: "freezer" | "fridge" | "normal") => () => {
 
         setKindBtns(prev => ({ ...prev, [key]: !prev[key] }));
     }
@@ -84,7 +126,7 @@ const Cart = () => {
     const onAllCheckClick = () => {
         if (!data) return;
         if (!isAllInCheckArr()) {
-            setCheckIdxArr(Array.from({ length: data.result[0].length }, (v, i) => i));
+            setCheckIdxArr(Array.from({ length: data.result[0].length }, (v, i) => data.result[0][i].type + "-" + i));
         } else {
             setCheckIdxArr([]);
         }
@@ -92,22 +134,23 @@ const Cart = () => {
 
 
 
-    const onFreezerOrFridgeBoxClick = (e: React.MouseEvent) => {
+    const onItemBoxClick = (e: React.MouseEvent) => {
         const checkBtn = (e.target as HTMLElement).closest("[data-check]") as HTMLElement;
         const plusBtn = (e.target as HTMLElement).closest("[data-plus]") as HTMLElement;
         const minusBtn = (e.target as HTMLElement).closest("[data-minus]") as HTMLElement;
         if (!data || data?.result[0].length === 0) return;
 
         if (checkBtn) {
-            const { dataset: { check } } = checkBtn;
+            const { dataset: { check, type } } = checkBtn;
             if (!check) return;
             const newCheckArr = [...checkIdxArr];
-            const index = newCheckArr.findIndex(item => item === +check);
+            const index = newCheckArr.findIndex(item => item === type + "-" + check);
             if (index !== -1) {
                 newCheckArr.splice(index, 1);
             } else {
-                newCheckArr.push(+check);
+                newCheckArr.push(type + "-" + check);
             }
+            console.log(newCheckArr);
             setCheckIdxArr(newCheckArr);
         }
         if (plusBtn) {
@@ -141,7 +184,13 @@ const Cart = () => {
 
 
     const onBuyClick = () => {
-        localStorage.setItem("weKurly_buyIndx", JSON.stringify(checkIdxArr));
+        const localArray: ICartItem[] = [];
+        checkIdxArr.forEach(key => {
+            const [type, index] = key.split("-");
+            localArray.push(kindData[type][+index]);
+        })
+        localStorage.setItem("weKurly_buyIndx", JSON.stringify(localArray));
+
         router.push("/order");
 
     }
@@ -152,13 +201,32 @@ const Cart = () => {
     }, [amount]);
 
 
+    useEffect(() => {
+        if (data && data.result[0].length) {
+
+            const newData: SeparateData = { freezer: [], fridge: [], normal: [] };
+            data.result[0].forEach(item => {
+                if (item.type === "냉동") {
+                    newData.freezer.push(item);
+                } else if (item.type === "냉장") {
+                    newData.fridge.push(item);
+                } else if (item.type === "상온") {
+                    newData.normal.push(item);
+                }
+
+            })
+            setKindData(newData);
+        }
+    }, [data]);
+
+
     return (
         <div className="px-28 pt-10">
             <Script
                 src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
                 strategy="beforeInteractive"
             ></Script>
-            <h1 className="text-3xl text-center">장바구니</h1>
+            <h1 className="text-3xl text-center ">장바구니</h1>
             <div className="grid grid-cols-[7fr_3fr]">
                 <div>
                     <div className="flex items-center  text-sm font-semibold text-gray-600 pt-16 pb-3">
@@ -177,7 +245,7 @@ const Cart = () => {
                         <div>선택삭제</div>
                     </div>
                     {
-                        data?.result[0].filter(item => item.type !== "냉장").length ?
+                        kindData.freezer.length ?
                             <div>
                                 <div className="flex justify-between items-center border-t-2 border-black py-3">
                                     <h2 className="text-lg">🧊<span className="font-semibold">냉동상품</span></h2>
@@ -194,15 +262,15 @@ const Cart = () => {
                                     </button>
                                 </div>
                                 {kindBtns.freezer ?
-                                    <div onClick={onFreezerOrFridgeBoxClick}>
-                                        {data?.result[0].filter(item => item.type !== "냉장").map((item, index) => <CartItem key={index} index={index} info={item} checkIdxArr={checkIdxArr} />)}
+                                    <div onClick={onItemBoxClick}>
+                                        {kindData.freezer.map((item, index) => <CartItem key={index} type="freezer" index={index} info={item} checkIdxArr={checkIdxArr} />)}
                                     </div>
                                     : null
                                 }
                             </div> : null
                     }
                     {
-                        data?.result[0].filter(item => item.type === "냉장").length ?
+                        kindData.fridge.length ?
                             <div>
                                 <div className="flex justify-between items-center border-t-2 border-black py-3">
                                     <h2 className="text-lg">💧 <span className="font-semibold">냉장상품</span></h2>
@@ -219,8 +287,33 @@ const Cart = () => {
                                     </button>
                                 </div>
                                 {kindBtns.fridge ?
-                                    <div onClick={onFreezerOrFridgeBoxClick}>
-                                        {data?.result[0].filter(item => item.type === "냉장").map((item, index) => <CartItem key={index} index={index} info={item} checkIdxArr={checkIdxArr} />)}
+                                    <div onClick={onItemBoxClick}>
+                                        {kindData.fridge.map((item, index) => <CartItem key={index} type="fridge" index={index} info={item} checkIdxArr={checkIdxArr} />)}
+                                    </div>
+                                    : null
+                                }
+                            </div> : null
+                    }
+                    {
+                        kindData.normal.length ?
+                            <div>
+                                <div className="flex justify-between items-center border-t-2 border-black py-3">
+                                    <h2 className="text-lg">☀<span className="font-semibold">상온상품</span></h2>
+                                    <button onClick={onArrowToggleClick("normal")}>
+                                        {kindBtns.normal ?
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                                            </svg>
+                                            :
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        }
+                                    </button>
+                                </div>
+                                {kindBtns.normal ?
+                                    <div onClick={onItemBoxClick}>
+                                        {kindData.normal.map((item, index) => <CartItem key={index} type="normal" index={index} info={item} checkIdxArr={checkIdxArr} />)}
                                     </div>
                                     : null
                                 }

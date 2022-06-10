@@ -1,4 +1,5 @@
 import SemiOrderInfo from '@components/order/SemiOrderInfo';
+import { ICartItem } from '@libs/types';
 import useMutate from '@libs/useMutate';
 import { RootState } from '@modules/index';
 import { NextPage } from 'next';
@@ -44,7 +45,7 @@ const Order: NextPage = () => {
 
     const [payMutate, { data: payResult, loading }] = useMutate<IPayResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/payment`);
 
-    const checkIdxArr = useRef<number[] | null>(typeof window === "undefined" ? null : JSON.parse(localStorage.getItem("weKurly_buyIndx") as string));
+    const checkIdxArr = useRef<ICartItem[] | null>(typeof window === "undefined" ? null : JSON.parse(localStorage.getItem("weKurly_buyIndx") as string));
 
     const [productsArrow, setProductsArrow] = useState(false);
 
@@ -56,20 +57,10 @@ const Order: NextPage = () => {
 
 
 
-    const getPayItems = () => {
-        if (!data || !checkIdxArr?.current) return;
-        const products = data.result[0];
-        const items = checkIdxArr.current.map(number => (
-            {
-                product_idx: products[number].product_idx, idx: products[number].idx, price: products[number].price,
-                discount: products[number].discount_price, amount: products[number].product_amount
-            }));
-        return items;
-    }
 
 
     const onPayBtnClick = () => {
-        const orderList = { orderList: getPayItems() };
+        const orderList = { orderList: checkIdxArr.current };
 
         if (!orderInfo) {
             alert("배송 정보의 정보등록을 해주세요");
@@ -135,12 +126,11 @@ const Order: NextPage = () => {
         if (!checkIdxArr.current) return null;
         let originPrice = 0;
         let discountPrice = 0;
-        if (checkIdxArr.current.length && data?.result[0].length) {
-            const { result } = data;
-            for (let i = 0; i < result[0].length; i++) {
-                if (!checkIdxArr.current.includes(i)) continue;
-                originPrice += (+result[0][i].price * result[0][i].product_amount);
-                discountPrice = discountPrice + (+result[0][i].discount_price ? +result[0][i].discount_price : +result[0][i].price) * result[0][i].product_amount;
+        if (checkIdxArr.current.length) {
+            const { current: items } = checkIdxArr;
+            for (let i = 0; i < items.length; i++) {
+                originPrice += (+items[i].price * items[i].product_amount);
+                discountPrice = discountPrice + (+items[i].discount_price ? +items[i].discount_price : +items[i].price) * items[i].product_amount;
             }
 
         }
@@ -165,7 +155,20 @@ const Order: NextPage = () => {
         }
 
 
-    }, [payResult])
+    }, [payResult]);
+
+
+    useEffect(() => {
+        if (data && data.result[0].length) {
+
+            const newArr = [...data.result[0]].sort((a, b) => {
+                if (a.type === null) return -1;
+                else return 1;
+            });
+            mutate((prev) => ({ ...prev!, result: [[...newArr], [...prev!.result[1]]] }), false);
+        }
+    }, [data]);
+
 
     return (
         <div className="px-28 py-12 relative  grid grid-areas-layout grid-cols-layout gird-rows-layout">
@@ -189,25 +192,25 @@ const Order: NextPage = () => {
                     {
                         productsArrow ?
                             <ul>
-                                {checkIdxArr?.current?.map((item: number, index) =>
+                                {checkIdxArr?.current?.map((item, index) =>
                                     <li key={index} className="grid grid-cols-[1fr_8fr_1fr_1.5fr] py-7 items-center border-b-[1px]">
-                                        <img src={data?.result[0][item].url} className="w-[60px] h-[75px]" />
+                                        <img src={item.url} className="w-[60px] h-[75px]" />
                                         <div className="font-semibold space-y-2">
-                                            <h3>{data?.result[0][item].name}</h3>
-                                            {data?.result[0][item].product_desc ?
-                                                <h5 className="text-sm text-gray-400">{data?.result[0][item].product_desc}</h5> : null}
+                                            <h3>{item.name}</h3>
+                                            {item.product_desc ?
+                                                <h5 className="text-sm text-gray-400">{item.product_desc}</h5> : null}
                                         </div>
                                         <div>
-                                            {data?.result[0][item].product_amount}개
+                                            {item.product_amount}개
                                         </div>
-                                        {data?.result && (+data?.result[0][item].discount_price ?
+                                        {checkIdxArr?.current && (+item.discount_price ?
                                             <div className="text-right justify-self-end font-semibold">
-                                                <h3>{+data?.result[0][item].discount_price * data?.result[0][item].product_amount}원</h3>
-                                                <h5 className="line-through text-gray-400 text-sm">{+data?.result[0][item].price * data?.result[0][item].product_amount}원</h5>
+                                                <h3>{+item.discount_price * item.product_amount}원</h3>
+                                                <h5 className="line-through text-gray-400 text-sm">{+item.price * item.product_amount}원</h5>
                                             </div>
                                             :
                                             <div className="text-right justify-self-end font-semibold">
-                                                <h3>{+data?.result[0][item].price * data?.result[0][item].product_amount}원</h3>
+                                                <h3>{+item.price * item.product_amount}원</h3>
                                             </div>
                                         )
                                         }
@@ -219,7 +222,7 @@ const Order: NextPage = () => {
                             <ul>
                                 <li className="p-10 border-b-[1px] text-center">
                                     <div>
-                                        {checkIdxArr.current && `${data?.result[0][checkIdxArr.current[0]].name} 외`}
+                                        {checkIdxArr.current && `${checkIdxArr.current[0].name} 외`}
                                         <span className="text-purple-800 font-semibold">{checkIdxArr.current && checkIdxArr.current.length - 1}개</span>
                                         상품을 주문합니다.
                                     </div>

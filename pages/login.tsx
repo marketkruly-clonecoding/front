@@ -18,7 +18,7 @@ interface ILoginForm {
 const Login = () => {
 
 
-    const [mutate, { data, error, loading }] = useMutate("http://prod.hiimpedro.site:9000/app/users/logIn_new");
+    const [mutate, { data, error, loading }] = useMutate("/app/users/logIn_new");
     const { register, handleSubmit } = useForm<ILoginForm>();
     const router = useRouter();
     const dispatch = useDispatch();

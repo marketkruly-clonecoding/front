@@ -1,4 +1,5 @@
 export interface Product {
+  [key: string]: any;
   product_idx: number;
   brand_name: string;
   name: string;
