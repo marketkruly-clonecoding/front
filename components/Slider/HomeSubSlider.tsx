@@ -42,24 +42,7 @@ const HomeSubSlider = ({ title, subTitle, datas }: IHomeSubSlider) => {
                 }} className="flex transition ease-in-out duration-300">
                     {
                         datas.map((item, index) =>
-                            // <li key={index} className="pr-[18px] space-y-2">
-                            //     <div className="relative w-[250px] h-[318px] bg-gray-400">
-                            //         <Image layout="fill" objectFit='cover' src={item[0].url} />
-                            //     </div>
-                            //     <div>{item[0].brand_name ? `[${item[0].brand_name}]` : null}{item[0].name}</div>
-                            //     {item[0].discount ?
-                            //         <div>
-                            //             <div className="space-x-2 text-lg">
-                            //                 <span className="text-orange-400 font-semibold">{item[0].discount}%</span>
-                            //                 <span className="font-semibold">{item[0].discount_price}원</span>
-                            //             </div>
-                            //             <div className="text-gray-400 line-through text-sm">{item[0].price}원</div>
-                            //         </div>
-                            //         :
-                            //         <div className="font-semibold">
-                            //             {item[0].price}원
-                            //         </div>}
-                            // </li>
+
                             <ImageItem key={index} data={item} isHome={true} />
                         )
                     }

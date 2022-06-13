@@ -29,7 +29,7 @@ const AddressWindow = ({ info, setAddAddressInfo, addressMutate }: IAddressWindo
     const { register, handleSubmit, watch, setValue } = useForm<IAddressForm>();
     const [defaultCheck, setDefaultCheck] = useState(false);
     const { user } = useSelector((state: RootState) => state.user);
-    const [mutate] = useMutate(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Address`);
+    const [mutate] = useMutate(`/app/users/${user.userIdx}/Address`);
 
     const onValid = (data: IAddressForm) => {
         const submitData: IAddressSubmit = { ...data, default_yn: defaultCheck ? "Y" : "N" };

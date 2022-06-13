@@ -38,8 +38,8 @@ const MyDeliverPage: NextPage = () => {
     const [fixAddressInfo, setFixAddressInfo] = useState<IAddressInfo | null>(null);
     const [likeClickInfo, setLikeClickInfo] = useState<IAddressInfo | null>();
     const { user } = useSelector((state: RootState) => state.user);
-    const { data, mutate } = useSWR<IGetAddressResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Address`);
-    const [likemutate] = useMutate(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Address/${likeClickInfo?.address_idx}/like`, true);
+    const { data, mutate } = useSWR<IGetAddressResult>(user?.userIdx ? `/app/users/${user.userIdx}/Address` : "");
+    const [likemutate] = useMutate(`/app/users/${user.userIdx}/Address/${likeClickInfo?.address_idx}/like`, true);
 
 
     const onAddAddressClick = () => {

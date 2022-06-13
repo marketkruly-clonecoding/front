@@ -31,10 +31,10 @@ const ProductDetail: NextPage = () => {
     const [arrow, setArrow] = useState(false);
     const [listInfo, setListInfo] = useState<IProductListWithNum[]>([]);
 
-    const { data, mutate: productInfoMutate } = useSWR<IProductDetailResult>(`http://prod.hiimpedro.site:9000/app/products/${router.query.id ? router.query.id : ""}`);
+    const { data, mutate: productInfoMutate } = useSWR<IProductDetailResult>(`/app/products/${router.query.id ? router.query.id : ""}`);
     console.log(data);
-    const [mutate, { loading }] = useMutate(`http://prod.hiimpedro.site:9000/app/products/${router.query.id || ""}/addcart`);
-    const [likeMutate, { data: likeData, loading: likeLoading }] = useMutate(`http://prod.hiimpedro.site:9000/app/users/favorite/${data?.result[0][0].product_idx}`);
+    const [mutate, { loading }] = useMutate(`/app/products/${router.query.id || ""}/addcart`);
+    const [likeMutate, { data: likeData, loading: likeLoading }] = useMutate(`/app/users/favorite/${data?.result[0][0].product_idx}`);
 
     const dispatch = useDispatch();
 

@@ -1,7 +1,5 @@
-import { prepareServerlessUrl } from "next/dist/server/base-server";
 import { useState } from "react";
-import Cookies from "universal-cookie";
-const cookies = new Cookies();
+import checkAndMakeValidToken from "./checkAndMakeValidToken";
 
 interface IUseMutateState<T> {
   loading: boolean;
@@ -23,11 +21,21 @@ const useMutate = <T = any>(
 
   function mutate(data: any) {
     setState((prev) => ({ ...prev, loading: true }));
+    if (!checkAndMakeValidToken()) {
+      alert("로그인을 다시 해주십쇼");
+      localStorage.removeItem("weKurly_access_token");
+      localStorage.removeItem("weKurlyuser");
+      location.href = "/enter";
+      return;
+    }
     fetch(url, {
       method: !patch ? "POST" : "PATCH",
       headers: {
         "Content-Type": "application/json",
-        "x-access-token": cookies.get("weKurly_access_token"),
+        // "x-access-token": cookies.get("weKurly_access_token"),
+        "x-access-token": localStorage.getItem("weKurly_access_token")
+          ? JSON.parse(localStorage.getItem("weKurly_access_token")!)
+          : "",
       },
       // credentials: "include",
       body: JSON.stringify(data),

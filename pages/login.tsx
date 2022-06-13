@@ -38,7 +38,8 @@ const Login = () => {
             const { userIdx, name, accessToken } = info;
             localStorage.setItem("weKurlyuser", JSON.stringify({ userIdx, name }));
             dispatch(login({ userIdx, name }));
-            cookies.set("weKurly_access_token", accessToken, { sameSite: 'lax' });
+            localStorage.setItem("weKurly_access_token", JSON.stringify(accessToken));
+            // cookies.set("weKurly_access_token", accessToken, { sameSite: 'lax' });
             router.push("/");
         }
     }, [data])

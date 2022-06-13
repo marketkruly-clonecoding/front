@@ -15,8 +15,8 @@ const StoreInCart = ({ info }: { info: [Info: Product, ListInfo: [] | ProductLis
 
     const dispatch = useDispatch();
     const { user } = useSelector((state: RootState) => state.user);
-    const [mutate, { loading }] = useMutate(`http://prod.hiimpedro.site:9000/app/products/${info[0].product_idx || ""}/addcart`);
-    const { data, mutate: cartMutate } = useSWR<ICartInfoResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Cart`);
+    const [mutate, { loading }] = useMutate(`/app/products/${info[0].product_idx || ""}/addcart`);
+    const { data, mutate: cartMutate } = useSWR<ICartInfoResult>(`/app/users/${user.userIdx}/Cart`);
 
     const [buyNumbers, setBuyNumbers] = useState(info[1].length > 1 ? info[1].map(item => 0) : [1]);
 

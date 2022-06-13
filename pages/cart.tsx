@@ -49,16 +49,18 @@ const SeparateType: Separate = {
     "상온": "normal"
 }
 
+type SeparateKeyType = "freezer" | "fridge" | "normal";
+
 
 
 const Cart = () => {
 
     const { user } = useSelector((state: RootState) => state.user);
-    const { data, mutate } = useSWR<ICartInfoResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Cart`);
+    const { data, mutate } = useSWR<ICartInfoResult>(user?.userIdx ? `/app/users/${user.userIdx}/Cart` : "");
 
 
     const [amount, setAmount] = useState<IAmount | null>(null);
-    const [fixAmount, { loading }] = useMutate(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Cart/${amount?.product_idx}/count`, true);
+    const [fixAmount, { loading }] = useMutate(`/app/users/${user.userIdx}/Cart/${amount?.product_idx}/count`, true);
     const [kindData, setKindData] = useState<SeparateData>({ freezer: [], fridge: [], normal: [] });
 
     const router = useRouter();
@@ -126,7 +128,14 @@ const Cart = () => {
     const onAllCheckClick = () => {
         if (!data) return;
         if (!isAllInCheckArr()) {
-            setCheckIdxArr(Array.from({ length: data.result[0].length }, (v, i) => data.result[0][i].type + "-" + i));
+            // setCheckIdxArr(Array.from({ length: data.result[0].length }, (v, i) => data.result[0][i].type + "-" + i));
+            const allData = [
+                ...kindData.freezer.map((item, index) => `freezer-${index}`),
+                ...kindData.fridge.map((item, index) => `fridge-${index}`),
+                ...kindData.normal.map((item, index) => `normal-${index}`),
+            ];
+
+            setCheckIdxArr(allData);
         } else {
             setCheckIdxArr([]);
         }
@@ -154,30 +163,30 @@ const Cart = () => {
             setCheckIdxArr(newCheckArr);
         }
         if (plusBtn) {
-            const { dataset: { plus } } = plusBtn;
-            if (!plus) return;
-            const newResult = [...data.result[0]];
-            const newCheckArr = { ...data.result[0][+plus], product_amount: data.result[0][+plus].product_amount + 1 };
+            const { dataset: { plus, type } } = plusBtn;
+            if (!plus || !type) return;
+            const newResult = [...kindData[type!]];
+            const newCheckArr = { ...kindData[type!][+plus], product_amount: kindData[type!][+plus].product_amount + 1 };
             newResult[+plus] = newCheckArr;
-            mutate(prev => ({ ...prev!, result: [[...newResult], [...prev!.result[1]]] }), false);
+            setKindData(prev => ({ ...prev, [type]: newResult }));
             setAmount({
                 is_type: 1,
-                product_detail_idx: data.result[0][+plus].idx !== 0 ? data.result[0][+plus].idx : 0,
-                product_idx: data.result[0][+plus].product_idx
+                product_detail_idx: kindData[type!][+plus].idx !== 0 ? kindData[type!][+plus].idx : 0,
+                product_idx: kindData[type!][+plus].product_idx
             });
         }
         if (minusBtn) {
-            const { dataset: { minus } } = minusBtn;
-            if (!minus) return;
-            if (data.result[0][+minus].product_amount === 1) return;
-            const newResult = [...data.result[0]];
-            const newCheckArr = { ...data.result[0][+minus], product_amount: data.result[0][+minus].product_amount - 1 };
+            const { dataset: { minus, type } } = minusBtn;
+            if (!minus || !type) return;
+            if (kindData[type][+minus].product_amount === 1) return;
+            const newResult = [...kindData[type]];
+            const newCheckArr = { ...kindData[type][+minus], product_amount: kindData[type][+minus].product_amount - 1 };
             newResult[+minus] = newCheckArr;
-            mutate(prev => ({ ...prev!, result: [newResult, prev!.result[1]] }), false);
+            setKindData(prev => ({ ...prev, [type]: newResult }));
             setAmount({
                 is_type: 0,
-                product_detail_idx: data.result[0][+minus].idx !== 0 ? data.result[0][+minus].idx : 0,
-                product_idx: data.result[0][+minus].product_idx
+                product_detail_idx: kindData[type][+minus].idx !== 0 ? kindData[type][+minus].idx : 0,
+                product_idx: kindData[type][+minus].product_idx
             });
         }
     }

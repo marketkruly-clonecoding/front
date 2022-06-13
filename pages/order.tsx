@@ -39,11 +39,11 @@ const Order: NextPage = () => {
     const router = useRouter();
 
     const { user } = useSelector((state: RootState) => state.user);
-    const { data, mutate } = useSWR<ICartInfoResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Cart`);
+    const { data, mutate } = useSWR<ICartInfoResult>(`/app/users/${user.userIdx}/Cart`);
 
-    const { data: userData } = useSWR<IUserInfoResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/BeforePayment`);
+    const { data: userData } = useSWR<IUserInfoResult>(`/app/users/${user.userIdx}/BeforePayment`);
 
-    const [payMutate, { data: payResult, loading }] = useMutate<IPayResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/payment`);
+    const [payMutate, { data: payResult, loading }] = useMutate<IPayResult>(`/app/users/${user.userIdx}/payment`);
 
     const checkIdxArr = useRef<ICartItem[] | null>(typeof window === "undefined" ? null : JSON.parse(localStorage.getItem("weKurly_buyIndx") as string));
 

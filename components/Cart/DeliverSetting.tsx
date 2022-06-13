@@ -20,13 +20,13 @@ interface IDeliverSetting {
 const DeliverSetting = ({ setAddressFixBtn, likeAddressMutate }: IDeliverSetting) => {
 
     const { user } = useSelector((state: RootState) => state.user);
-    const { data, mutate } = useSWR<IGetAddressResult>(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Address`);
+    const { data, mutate } = useSWR<IGetAddressResult>(user.userIdx ? `/app/users/${user.userIdx}/Address` : "");
     const [likeClickInfo, setLikeClickInfo] = useState<IAddressInfo | null>(null);
     const [fixAddressInfo, setFixAddressInfo] = useState<IAddressInfo | null>(null);
     const [addAddressInfo, setAddAddressInfo] = useState("");
 
 
-    const [likemutate] = useMutate(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Address/${likeClickInfo?.address_idx}/like`, true);
+    const [likemutate] = useMutate(`/app/users/${user.userIdx}/Address/${likeClickInfo?.address_idx}/like`, true);
 
 
 

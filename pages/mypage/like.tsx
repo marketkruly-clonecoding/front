@@ -25,7 +25,7 @@ const MyLikePage: NextPage = () => {
     const { user } = useSelector((state: RootState) => state.user);
 
 
-    const { data } = useSWR<FavoriteResponse>(user.userIdx ? `http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/favorite` : "");
+    const { data } = useSWR<FavoriteResponse>(user.userIdx ? `/app/users/${user.userIdx}/favorite` : "");
     console.log(data);
 
     return (

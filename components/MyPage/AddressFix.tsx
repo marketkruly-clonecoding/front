@@ -28,9 +28,8 @@ const AddressFix = ({ setFixAddressInfo, fixAddressInfo, addressMutate, addressL
     const [defaultCheck, setDefaultCheck] = useState(false);
     const { user } = useSelector((state: RootState) => state.user);
     const { register, handleSubmit, setValue } = useForm<IAddressFixForm>();
-    const [mutate, { data }] = useMutate(`http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Address/${fixAddressInfo?.address_idx}`, true);
-
-    const [delMutate] = useMutate(`http://prod.hiimpedro.site:9000/app/address/${fixAddressInfo?.address_idx}/delete`, true);
+    const [mutate, { data }] = useMutate(`/app/users/${user.userIdx}/Address/${fixAddressInfo?.address_idx}`, true);
+    const [delMutate] = useMutate(`/app/address/${fixAddressInfo?.address_idx}/delete`, true);
 
     const onValid = (data: IAddressFixForm) => {
         const submitData = { ...data, default_yn: defaultCheck ? "Y" : "N" };

@@ -56,11 +56,11 @@ const SignUp = () => {
     const [emailOverlap, setEmailOverlap] = useState(false);
     const [phoneOverlap, setPhoneOverlap] = useState(false);
 
-    const [mutate, { data, loading, error: dataError }] = useMutate("http://prod.hiimpedro.site:9000/app/users/join");
+    const [mutate, { data, loading, error: dataError }] = useMutate("/app/users/join");
 
     const overlapCheck = (key: string, data: string) => {
 
-        fetch("http://prod.hiimpedro.site:9000/app/users/join/check", {
+        fetch("/app/users/join/check", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

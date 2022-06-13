@@ -30,7 +30,7 @@ const Navigation = () => {
     const { register, handleSubmit, reset } = useForm<ISearchForm>();
 
     const { user: { user }, cartAlarmInfo } = useSelector((state: RootState) => ({ user: state.user, cartAlarmInfo: state.product.cartAlarmInfo }));
-    const { data, mutate } = useSWR<ICartInfoResult>(user.userIdx ? `http://prod.hiimpedro.site:9000/app/users/${user.userIdx}/Cart` : "");
+    const { data, mutate } = useSWR<ICartInfoResult>(user.userIdx ? `/app/users/${user.userIdx}/Cart` : "");
 
     console.log(data);
     const dispatch = useDispatch();

@@ -18,7 +18,7 @@ const ImageItem = ({ data, isHome = false }: IImageItem) => {
     const dispatch = useDispatch();
     const router = useRouter();
 
-    const [mutate, { loading }] = useMutate(`http://prod.hiimpedro.site:9000/app/products/${router.query.id || ""}/addcart`);
+    const [mutate, { loading }] = useMutate(router.query.id ? `/app/products/${router.query.id}/addcart` : "");
 
 
     const onClick = () => {
