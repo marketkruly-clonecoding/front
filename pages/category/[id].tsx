@@ -10,16 +10,17 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import useSWR from 'swr';
 
 const CategoryDetail = ({ result }: any) => {
 
     const router = useRouter();
     const { cartWindow } = useSelector((state: RootState) => state.product);
+
     if (router.isFallback) {
         return <div>로딩중</div>
     }
 
-    console.log(result);
 
     return (
         <div className="p-28 pt-6">
@@ -27,7 +28,7 @@ const CategoryDetail = ({ result }: any) => {
             <h1 className="text-3xl text-center p-9">{categoryIdKey[result.category]}</h1>
             <ul className="grid grid-cols-4 border-2 justify-center items-center p-8 gap-y-3 text-sm font-semibold">
                 <li className={cls(result.id === mainCategoryApiId[result.category] + "" ? "text-purple-800" : "", "cursor-pointer  flex justify-start items-center")}>
-                    <Link href={`/category/${result.category}-${mainCategoryApiId[result.category]}`}>
+                    <Link href={`/category/${result.category}-${mainCategoryApiId[result.category]}-1`}>
                         <a>
                             전체보기
                         </a>
@@ -35,7 +36,7 @@ const CategoryDetail = ({ result }: any) => {
                 </li>
                 {category[result.category].map((item: string, index: number) =>
                     <li key={index} className={cls(result.id === subCategoryApiId[result.category][index] + "" ? "text-purple-800" : "", "cursor-pointer  flex justify-start items-center")}>
-                        <Link href={`/category/${result.category}-${subCategoryApiId[result.category][index]}`}>
+                        <Link href={`/category/${result.category}-${subCategoryApiId[result.category][index]}-1`}>
                             <a>
                                 {item}
                             </a>
@@ -60,10 +61,11 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
 
-    const [category, id] = (params?.id + "").split("-");
+    const [category, id, page] = (params?.id + "").split("-");
+    console.log(params);
     if (!category || !id) return { props: {} };
 
-    const result = await (await fetch(`http://prod.hiimpedro.site:9000/app/products/product?Category=${encodeURIComponent(id)}`)).json();
+    const result = await (await fetch(`http://prod.hiimpedro.site:9000/app/products/product?Category=${encodeURIComponent(id)}&Pages=${page}`)).json();
 
     return {
         props: {

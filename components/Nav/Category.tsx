@@ -23,7 +23,7 @@ const Category = ({ onCategoryEnter, onCategoryMouseLeave }: ICategory) => {
 
         const { dataset: { move } } = target;
         if (move)
-            router.push(`/category/${selectKey}-${move}`);
+            router.push(`/category/${selectKey}-${move}-1`);
 
     }
 

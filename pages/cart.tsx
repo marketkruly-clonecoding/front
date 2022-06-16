@@ -69,7 +69,8 @@ const Cart = () => {
     const [kindBtns, setKindBtns] = useState({ freezer: true, fridge: true, normal: true });
     const [addressFixBtn, setAddressFixBtn] = useState(false);
 
-
+    const { data: test } = useSWR(`http://prod.hiimpedro.site:9000/app/products/product?Category=${encodeURIComponent("22")}&Pages=1`);
+    console.log(test);
     const getFindLikeAddress = () => {
         const likeAddress = data?.result[1].find(item => item.is_like === "Y");
         if (!likeAddress) return "";
